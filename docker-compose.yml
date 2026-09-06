@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: exam_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: exam_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d exam_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: exam_backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@postgres:5432/exam_db
+      JWT_SECRET: supersecretjwtkey_change_in_production_min32chars_required!
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 480
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: gpt-4o
+      OCR_PROVIDER: tesseract
+      FACE_ABSENT_SCORE: 10
+      MULTIPLE_FACES_SCORE: 25
+      GAZE_AWAY_SCORE: 5
+      TAB_SWITCH_SCORE: 10
+      WINDOW_BLUR_SCORE: 5
+      MAX_SUSPICION_SCORE: 100
+      BACKEND_HOST: 0.0.0.0
+      BACKEND_PORT: 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: exam_frontend
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+      NEXT_PUBLIC_WS_BASE_URL: ws://localhost:8000
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
