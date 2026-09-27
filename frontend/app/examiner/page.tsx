@@ -15,8 +15,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { examinerApi, examsApi, ExaminerStats, Exam } from "../../services/api";
+import { useLanguage } from "../../i18n";
 
 export default function ExaminerDashboardPage() {
+  const { t } = useLanguage();
   const [stats, setStats] = useState<ExaminerStats | null>(null);
   const [recentExams, setRecentExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +48,7 @@ export default function ExaminerDashboardPage() {
 
   const statCards = [
     {
-      title: "Question Bank",
+      title: t("examiner.questionBank"),
       value: stats?.total_questions ?? 0,
       label: "Total Questions Available",
       icon: BookOpen,
@@ -54,7 +56,7 @@ export default function ExaminerDashboardPage() {
       href: "/examiner/questions",
     },
     {
-      title: "Total Exams",
+      title: t("examiner.totalExams"),
       value: stats?.total_exams ?? 0,
       label: "Exams Configured",
       icon: FileSpreadsheet,
@@ -62,7 +64,7 @@ export default function ExaminerDashboardPage() {
       href: "/examiner/exams",
     },
     {
-      title: "Active Exams",
+      title: t("common.active"),
       value: stats?.active_exams ?? 0,
       label: "Currently Open for Students",
       icon: Activity,
@@ -70,7 +72,7 @@ export default function ExaminerDashboardPage() {
       href: "/examiner/exams",
     },
     {
-      title: "Completed Exams",
+      title: t("common.completed"),
       value: stats?.completed_exams ?? 0,
       label: "Exam Windows Closed",
       icon: CheckCircle2,
@@ -78,7 +80,7 @@ export default function ExaminerDashboardPage() {
       href: "/examiner/exams",
     },
     {
-      title: "Pending Evaluations",
+      title: t("examiner.pendingEvaluations"),
       value: stats?.pending_evaluations ?? 0,
       label: "Awaiting Result Aggregation",
       icon: Clock,
@@ -86,7 +88,7 @@ export default function ExaminerDashboardPage() {
       href: "/examiner/results",
     },
     {
-      title: "Flagged Sessions",
+      title: t("nav.proctoringReview"),
       value: stats?.flagged_sessions ?? 0,
       label: "Proctoring Review Recommended",
       icon: ShieldAlert,
@@ -100,9 +102,9 @@ export default function ExaminerDashboardPage() {
       {/* Header & Quick Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Examiner Dashboard</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t("examiner.dashboard")}</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Real-time overview of examinations, candidate sessions, and proctoring telemetry.
+            {t("examiner.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -110,7 +112,7 @@ export default function ExaminerDashboardPage() {
             onClick={fetchDashboardData}
             disabled={loading}
             className="p-2 text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
-            title="Refresh statistics"
+            title={t("common.refresh")}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -119,14 +121,14 @@ export default function ExaminerDashboardPage() {
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition-colors"
           >
             <BookOpen className="w-4 h-4 text-slate-500" />
-            <span>Question Bank</span>
+            <span>{t("examiner.questionBank")}</span>
           </Link>
           <Link
             href="/examiner/exams/create"
             className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm transition-colors"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Create Exam</span>
+            <span>{t("examiner.createExam")}</span>
           </Link>
         </div>
       </div>

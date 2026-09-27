@@ -14,30 +14,14 @@ async def client():
 
 @pytest.fixture
 async def admin_token(client):
-    ts = int(time.time() * 1000)
-    email = f"platform_adm_{ts}@example.com"
-    pwd = "Password123!"
-    reg = await client.post(
-        "/api/auth/register",
-        json={"email": email, "password": pwd, "name": "Super Admin", "role": "admin"},
-    )
-    assert reg.status_code == 201
-    login = await client.post("/api/auth/login", json={"email": email, "password": pwd})
+    login = await client.post("/api/auth/login", json={"email": "admin@example.com", "password": "Admin@123"})
     assert login.status_code == 200
-    return login.json()["access_token"], email
+    return login.json()["access_token"], "admin@example.com"
 
 
 @pytest.fixture
 async def examiner_token(client):
-    ts = int(time.time() * 1000)
-    email = f"adm_test_ex_{ts}@example.com"
-    pwd = "Password123!"
-    reg = await client.post(
-        "/api/auth/register",
-        json={"email": email, "password": pwd, "name": "Tester Examiner", "role": "examiner"},
-    )
-    assert reg.status_code == 201
-    login = await client.post("/api/auth/login", json={"email": email, "password": pwd})
+    login = await client.post("/api/auth/login", json={"email": "examiner@example.com", "password": "Examiner@123"})
     assert login.status_code == 200
     return login.json()["access_token"]
 

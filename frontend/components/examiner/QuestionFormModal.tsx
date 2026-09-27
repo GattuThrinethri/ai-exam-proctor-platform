@@ -205,7 +205,7 @@ export default function QuestionFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl border border-slate-200 overflow-hidden my-8">
+      <div className="bg-white w-full max-w-3xl lg:max-w-4xl rounded-2xl shadow-xl border border-slate-200 overflow-hidden my-8">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div>
@@ -378,42 +378,52 @@ export default function QuestionFormModal({
 
           {/* Short Answer fields */}
           {questionType === "SHORT_ANSWER" && (
-            <div className="pt-2 border-t border-slate-100">
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Expected Answer (Normalized string comparison)
-              </label>
-              <input
-                type="text"
+            <div className="pt-2 border-t border-slate-100 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Expected Answer / Keywords (Normalized Evaluation Reference)
+                </label>
+                <span className="text-[11px] text-slate-400">
+                  {expectedAnswer.length} characters
+                </span>
+              </div>
+              <textarea
+                rows={4}
                 required
                 value={expectedAnswer}
                 onChange={(e) => setExpectedAnswer(e.target.value)}
-                placeholder="e.g. relational database"
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                placeholder="Enter expected concise answer, canonical key terms, or acceptable variations..."
+                className="w-full min-h-[120px] px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-y leading-relaxed"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
-                Student submissions matching this answer will receive full marks automatically.
+              <p className="text-[11px] text-slate-500">
+                Student submissions matching this answer or containing key expected terms will receive full marks automatically.
               </p>
             </div>
           )}
 
           {/* Long Answer & Image Upload fields */}
           {(questionType === "LONG_ANSWER" || questionType === "IMAGE_UPLOAD") && (
-            <div className="pt-2 border-t border-slate-100">
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Model Answer / Grading Rubric Reference
-              </label>
+            <div className="pt-2 border-t border-slate-100 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Model Answer / Comprehensive Grading Rubric Reference
+                </label>
+                <span className="text-[11px] text-slate-400">
+                  {modelAnswer.length} characters
+                </span>
+              </div>
               <textarea
-                rows={3}
+                rows={10}
                 required
                 value={modelAnswer}
                 onChange={(e) => setModelAnswer(e.target.value)}
-                placeholder="Comprehensive reference answer and key points for AI subjective evaluation..."
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                placeholder="Enter comprehensive reference answer, key concepts, detailed grading breakdown, and rubric guidelines for AI subjective evaluation..."
+                className="w-full min-h-[250px] px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-y leading-relaxed font-normal"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-slate-500">
                 {questionType === "IMAGE_UPLOAD"
-                  ? "Handwritten answers will be OCR-extracted and evaluated against this model answer."
-                  : "The AI subjective grading pipeline compares candidate essays to this rubric."}
+                  ? "Handwritten answers will be OCR-extracted and evaluated against this comprehensive model answer."
+                  : "The AI subjective grading pipeline compares candidate essays to this detailed rubric."}
               </p>
             </div>
           )}

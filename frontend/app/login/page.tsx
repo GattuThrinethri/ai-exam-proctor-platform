@@ -10,15 +10,18 @@ import {
   GraduationCap,
   UserCheck,
   Shield,
-  ArrowLeft
+  ArrowLeft,
 } from "lucide-react";
 import { authService } from "../../services/auth";
+import LanguageSelector from "../../components/layout/LanguageSelector";
+import { useLanguage } from "../../i18n";
 
 type PortalRole = "student" | "examiner" | "admin";
 
 function LoginFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
 
   const roleParam = searchParams.get("role") as PortalRole | null;
   const redirectParam = searchParams.get("redirect");
@@ -34,9 +37,9 @@ function LoginFormInner() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(
     registeredParam
-      ? "Account created successfully! Please sign in with your credentials."
+      ? t("auth.accountCreatedSuccess")
       : expiredParam
-      ? "Your previous session has expired. Please sign in again."
+      ? t("auth.sessionExpired")
       : null
   );
 
@@ -78,7 +81,7 @@ function LoginFormInner() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setError("Please provide both email address and password.");
+      setError(t("auth.invalidCredentials"));
       return;
     }
 
@@ -113,7 +116,7 @@ function LoginFormInner() {
 
       router.push(destination);
     } catch (err: any) {
-      setError(err.message || "Authentication failed. Please verify your credentials.");
+      setError(err.message || t("auth.invalidCredentials"));
     } finally {
       setLoading(false);
     }
@@ -122,20 +125,20 @@ function LoginFormInner() {
   const getRoleBadge = () => {
     if (selectedRole === "admin") {
       return {
-        label: "Administrator Portal",
+        label: t("common.adminPortal"),
         color: "bg-purple-100 text-purple-800 border-purple-300",
         icon: Shield,
       };
     }
     if (selectedRole === "examiner") {
       return {
-        label: "Examiner Portal",
+        label: t("common.examinerPortal"),
         color: "bg-indigo-100 text-indigo-800 border-indigo-300",
         icon: UserCheck,
       };
     }
     return {
-      label: "Student Portal",
+      label: t("common.studentPortal"),
       color: "bg-sky-100 text-sky-800 border-sky-300",
       icon: GraduationCap,
     };
@@ -168,7 +171,7 @@ function LoginFormInner() {
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Student
+            {t("auth.student")}
           </button>
           <button
             type="button"
@@ -179,7 +182,7 @@ function LoginFormInner() {
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Examiner
+            {t("auth.examiner")}
           </button>
           <button
             type="button"
@@ -190,7 +193,7 @@ function LoginFormInner() {
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Administrator
+            {t("auth.admin")}
           </button>
         </div>
 
@@ -213,7 +216,7 @@ function LoginFormInner() {
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Email Address
+              {t("auth.emailAddress")}
             </label>
             <input
               type="email"
@@ -234,7 +237,7 @@ function LoginFormInner() {
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Password
+              {t("auth.password")}
             </label>
             <input
               type="password"
@@ -255,12 +258,20 @@ function LoginFormInner() {
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Authenticating...</span>
+                <span>{t("auth.authenticating")}</span>
               </>
             ) : (
               <>
                 <LogIn className="w-4 h-4" />
-                <span>Sign In to {selectedRole === "admin" ? "Admin" : selectedRole === "examiner" ? "Examiner" : "Student"}</span>
+                <span>
+                  {t("auth.signInButton")} (
+                  {selectedRole === "admin"
+                    ? t("auth.admin")
+                    : selectedRole === "examiner"
+                    ? t("auth.examiner")
+                    : t("auth.student")}
+                  )
+                </span>
               </>
             )}
           </button>
@@ -268,19 +279,19 @@ function LoginFormInner() {
 
         {/* Registration Link */}
         <div className="mt-4 text-center text-xs text-slate-600">
-          Don&apos;t have an account?{" "}
+          {t("auth.noAccount")}{" "}
           <Link
             href={`/register?role=${selectedRole === "examiner" ? "examiner" : "student"}`}
             className="font-semibold text-indigo-600 hover:text-indigo-700 underline"
           >
-            Create one
+            {t("auth.createOne")}
           </Link>
         </div>
 
         {/* Demo Quick Fill Section */}
         <div className="mt-6 pt-5 border-t border-slate-100">
           <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-2.5 text-center">
-            One-Click Demo Credentials:
+            {t("auth.demoCredentials")}
           </p>
           <div className="grid grid-cols-3 gap-1.5">
             <button
@@ -292,7 +303,7 @@ function LoginFormInner() {
                   : "border-slate-200 text-slate-700 hover:bg-slate-50"
               }`}
             >
-              Student
+              {t("auth.student")}
             </button>
             <button
               type="button"
@@ -303,7 +314,7 @@ function LoginFormInner() {
                   : "border-slate-200 text-slate-700 hover:bg-slate-50"
               }`}
             >
-              Examiner
+              {t("auth.examiner")}
             </button>
             <button
               type="button"
@@ -314,7 +325,7 @@ function LoginFormInner() {
                   : "border-slate-200 text-slate-700 hover:bg-slate-50"
               }`}
             >
-              Admin
+              {t("auth.admin")}
             </button>
           </div>
           <div className="mt-3 text-[11px] text-slate-400 text-center">
@@ -327,17 +338,20 @@ function LoginFormInner() {
 }
 
 export default function LoginPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
-      {/* Top back button */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-md mb-6">
+      {/* Top back button and language selector */}
+      <div className="sm:mx-auto sm:w-full sm:max-w-md mb-6 flex items-center justify-between">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Home
+          {t("common.backToHome")}
         </Link>
+        <LanguageSelector />
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
@@ -345,10 +359,10 @@ export default function LoginPage() {
           <ShieldCheck className="w-8 h-8" />
         </div>
         <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-          IntelliExam Platform
+          {t("auth.signInTitle")}
         </h2>
         <p className="mt-2 text-sm text-slate-600">
-          AI-Based Intelligent Examination & Proctoring System
+          {t("auth.signInSubtitle")}
         </p>
       </div>
 
@@ -357,7 +371,7 @@ export default function LoginPage() {
           fallback={
             <div className="bg-white py-12 px-6 shadow-sm rounded-2xl border border-slate-200 text-center">
               <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-              <p className="text-xs text-slate-500 font-medium">Loading credentials form...</p>
+              <p className="text-xs text-slate-500 font-medium">{t("common.loading")}</p>
             </div>
           }
         >

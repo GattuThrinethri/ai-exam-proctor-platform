@@ -34,6 +34,59 @@ export interface QuestionListResponse {
   page_size: number;
 }
 
+export interface ImportedOption {
+  option_text: string;
+  is_correct: boolean;
+}
+
+export interface ExtractedQuestion {
+  temp_id: string;
+  question_text: string;
+  question_type: string;
+  options: ImportedOption[];
+  correct_answer?: string | null;
+  subject?: string | null;
+  difficulty: string;
+  marks: number;
+  negative_marks: number;
+  model_answer?: string | null;
+  expected_answer?: string | null;
+  is_duplicate: boolean;
+  duplicate_reason?: string | null;
+}
+
+export interface ImportPreviewResponse {
+  filename: string;
+  file_type: string;
+  file_size: number;
+  detected_subject?: string | null;
+  total_extracted: number;
+  duplicate_count: number;
+  questions: ExtractedQuestion[];
+}
+
+export interface ImportConfirmRequest {
+  questions: {
+    question_text: string;
+    question_type: string;
+    options?: ImportedOption[];
+    correct_answer?: string | null;
+    subject?: string | null;
+    difficulty?: string;
+    marks?: number;
+    negative_marks?: number;
+    model_answer?: string | null;
+    expected_answer?: string | null;
+  }[];
+  default_subject?: string | null;
+}
+
+export interface ImportConfirmResponse {
+  imported_count: number;
+  skipped_count: number;
+  question_ids: number[];
+}
+
 export interface Exam {
   id: number;
   title: string;
@@ -74,9 +127,60 @@ export interface ExaminerResult {
   objective_score: number;
   subjective_score: number;
   status: string;
+  published: boolean;
+  requires_evaluation: boolean;
   suspicion_score: number;
   submitted_at?: string | null;
   generated_at: string;
+}
+
+export interface ExaminerQuestionEvaluationItem {
+  question_id: number;
+  question_text: string;
+  question_type: string;
+  difficulty: string;
+  marks: number;
+  student_answer_text?: string | null;
+  student_selected_option_ids?: number[] | null;
+  student_image_url?: string | null;
+  ocr_extracted_text?: string | null;
+  options?: { id: number; option_text: string; is_correct?: boolean | null }[] | null;
+  expected_answer?: string | null;
+  model_answer?: string | null;
+  auto_score?: number | null;
+  ai_score?: number | null;
+  examiner_score?: number | null;
+  examiner_feedback?: string | null;
+}
+
+export interface ExaminerEvaluationSessionResponse {
+  session_id: number;
+  exam_id: number;
+  exam_title: string;
+  subject: string;
+  duration_minutes: number;
+  student_id: number;
+  student_name: string;
+  student_email: string;
+  status: string;
+  published: boolean;
+  submitted_at?: string | null;
+  total_score: number;
+  objective_score: number;
+  subjective_score: number;
+  max_score: number;
+  questions: ExaminerQuestionEvaluationItem[];
+}
+
+export interface QuestionScoreInput {
+  question_id: number;
+  marks_awarded: number;
+  feedback?: string | null;
+}
+
+export interface ExaminerFinalizeEvaluationRequest {
+  evaluations: QuestionScoreInput[];
+  publish_result?: boolean;
 }
 
 export interface ProctoringSession {
@@ -109,8 +213,9 @@ const API_BASE = (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = authService.getToken();
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(options.headers as Record<string, string>),
   };
 
@@ -206,6 +311,22 @@ export const questionsApi = {
       method: "DELETE",
     });
   },
+
+  importDocument(file: File): Promise<ImportPreviewResponse> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<ImportPreviewResponse>("/api/questions/import", {
+      method: "POST",
+      body: formData,
+    });
+  },
+
+  confirmImport(data: ImportConfirmRequest): Promise<ImportConfirmResponse> {
+    return request<ImportConfirmResponse>("/api/questions/import/confirm", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
 };
 
 export const examsApi = {
@@ -264,6 +385,17 @@ export const examinerApi = {
     const qs = q.toString();
     return request<ProctoringSession[]>(`/api/examiner/proctoring-sessions${qs ? `?${qs}` : ""}`);
   },
+
+  getEvaluationSession(sessionId: number): Promise<ExaminerEvaluationSessionResponse> {
+    return request<ExaminerEvaluationSessionResponse>(`/api/examiner/evaluations/${sessionId}`);
+  },
+
+  finalizeEvaluation(sessionId: number, payload: ExaminerFinalizeEvaluationRequest): Promise<any> {
+    return request<any>(`/api/examiner/evaluations/${sessionId}/finalize`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
 };
 
 export const proctoringApi = {
@@ -282,14 +414,15 @@ export interface StudentResultSummary {
   exam_id: number;
   exam_title: string;
   subject: string;
-  total_score: number;
+  total_score: number | null;
   max_score: number;
-  objective_score: number;
-  subjective_score: number;
-  percentage: number;
+  objective_score?: number | null;
+  subjective_score?: number | null;
+  percentage: number | null;
   percentile: number | null;
   status: string;
   published: boolean;
+  requires_manual_evaluation?: boolean;
   submitted_at: string | null;
   generated_at: string;
 }
@@ -300,7 +433,7 @@ export interface QuestionReview {
   question_type: string;
   difficulty: string;
   marks: number;
-  awarded_score: number;
+  awarded_score: number | null;
   student_selected_option_ids: number[] | null;
   student_answer_text: string | null;
   student_image_url: string | null;
@@ -319,15 +452,16 @@ export interface StudentResultDetail {
   exam_id: number;
   exam_title: string;
   subject: string;
-  total_score: number;
+  total_score: number | null;
   max_score: number;
-  objective_score: number;
-  subjective_score: number;
-  percentage: number;
+  objective_score?: number | null;
+  subjective_score?: number | null;
+  percentage: number | null;
   percentile: number | null;
-  suspicion_score: number;
+  suspicion_score?: number;
   status: string;
   published: boolean;
+  requires_manual_evaluation?: boolean;
   submitted_at: string | null;
   generated_at: string;
   question_reviews: QuestionReview[];
@@ -577,8 +711,12 @@ export const adminApi = {
     });
   },
 
-  getExams(params?: { search?: string }): Promise<AdminExam[]> {
-    return request<AdminExam[]>("/api/admin/exams");
+  getExams(params?: { search?: string; subject?: string }): Promise<AdminExam[]> {
+    const q = new URLSearchParams();
+    if (params?.search) q.set("search", params.search);
+    if (params?.subject) q.set("subject", params.subject);
+    const qs = q.toString();
+    return request<AdminExam[]>(`/api/admin/exams${qs ? `?${qs}` : ""}`);
   },
 
   getGlobalExams(): Promise<AdminExam[]> {

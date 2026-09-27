@@ -157,13 +157,26 @@ async def evaluate_session(session_id: int, db: AsyncSession) -> Result:
     total_calculated = round(total_objective_score + total_subjective_score, 2)
     final_total_score = max(0.0, total_calculated)
 
+    # Determine if exam requires manual subjective evaluation by an examiner
+    has_subjective_questions = any(
+        eq.question and eq.question.question_type in (
+            QuestionType.SHORT_ANSWER,
+            QuestionType.LONG_ANSWER,
+            QuestionType.IMAGE_UPLOAD
+        )
+        for eq in exam.exam_questions
+    )
+
+    # Purely objective exams publish immediately; exams with subjective questions remain unpublished (Evaluation Pending)
+    is_published = not has_subjective_questions
+
     # 5. Persist Result
     result = Result(
         session_id=session.id,
         total_score=final_total_score,
         objective_score=round(total_objective_score, 2),
         subjective_score=round(total_subjective_score, 2),
-        published=False,
+        published=is_published,
         generated_at=now
     )
     db.add(result)

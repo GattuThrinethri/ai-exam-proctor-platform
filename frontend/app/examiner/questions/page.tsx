@@ -13,11 +13,15 @@ import {
   CheckCircle2,
   FileQuestion,
   X,
+  Upload,
 } from "lucide-react";
 import { questionsApi, Question } from "../../../services/api";
 import QuestionFormModal from "../../../components/examiner/QuestionFormModal";
+import ImportQuestionsModal from "../../../components/examiner/ImportQuestionsModal";
+import { useLanguage } from "../../../i18n";
 
 export default function QuestionBankPage() {
+  const { t } = useLanguage();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +34,7 @@ export default function QuestionBankPage() {
 
   // Modals
   const [formModalOpen, setFormModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [viewingQuestion, setViewingQuestion] = useState<Question | null>(null);
   const [deletingQuestion, setDeletingQuestion] = useState<Question | null>(null);
@@ -112,12 +117,12 @@ export default function QuestionBankPage() {
   const getDifficultyBadge = (diff: string) => {
     const d = diff.toLowerCase();
     if (d === "easy") {
-      return <span className="px-2 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-700 rounded-full">Easy</span>;
+      return <span className="px-2 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-700 rounded-full">{t("examiner.easy")}</span>;
     }
     if (d === "medium") {
-      return <span className="px-2 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-700 rounded-full">Medium</span>;
+      return <span className="px-2 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-700 rounded-full">{t("examiner.medium")}</span>;
     }
-    return <span className="px-2 py-0.5 text-[11px] font-semibold bg-rose-50 text-rose-700 rounded-full">Hard</span>;
+    return <span className="px-2 py-0.5 text-[11px] font-semibold bg-rose-50 text-rose-700 rounded-full">{t("examiner.hard")}</span>;
   };
 
   return (
@@ -125,18 +130,27 @@ export default function QuestionBankPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Question Bank</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t("examiner.questionBank")}</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Create, categorize, and manage questions for automated and AI-evaluated exams.
+            {t("examiner.subtitle")}
           </p>
         </div>
-        <button
-          onClick={handleCreateNew}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>New Question</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setImportModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors"
+          >
+            <Upload className="w-4 h-4" />
+            <span>+ {t("examiner.importQuestions")}</span>
+          </button>
+          <button
+            onClick={handleCreateNew}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>{t("examiner.createQuestion")}</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -312,6 +326,13 @@ export default function QuestionBankPage() {
         onClose={() => setFormModalOpen(false)}
         onSuccess={handleQuestionSaved}
         initialQuestion={editingQuestion}
+      />
+
+      {/* Import Questions from Document Modal */}
+      <ImportQuestionsModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        onImportSuccess={fetchQuestions}
       />
 
       {/* Question Detail View Modal */}

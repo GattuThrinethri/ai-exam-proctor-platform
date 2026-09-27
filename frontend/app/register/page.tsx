@@ -16,12 +16,15 @@ import {
   User
 } from "lucide-react";
 import { authService } from "../../services/auth";
+import LanguageSelector from "../../components/layout/LanguageSelector";
+import { useLanguage } from "../../i18n";
 
 type RegisterRole = "student" | "examiner";
 
 function RegisterFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
 
   const roleParam = searchParams.get("role") as RegisterRole | null;
   const initialRole: RegisterRole = roleParam === "examiner" ? "examiner" : "student";
@@ -68,7 +71,7 @@ function RegisterFormInner() {
     const trimmedEmail = email.trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
-      setError("Please provide a valid email address.");
+      setError(t("auth.invalidCredentials"));
       return;
     }
 
@@ -83,26 +86,23 @@ function RegisterFormInner() {
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match. Please verify and re-enter.");
+      setError(t("auth.passwordsDoNotMatch"));
       return;
     }
 
     setLoading(true);
 
     try {
-      // 1. Call existing backend register endpoint
       await authService.register(trimmedName, trimmedEmail, password, role);
 
       if (role === "examiner") {
-        setSuccessMsg("Registration submitted successfully. Your examiner account is pending administrator approval.");
-        // Do NOT automatically redirect or auto-login examiner
+        setSuccessMsg(t("auth.examinerApprovalNotice"));
       } else {
-        setSuccessMsg("Registration successful. You can now sign in.");
-        // Automatically log newly registered student in
+        setSuccessMsg(t("auth.regSuccessStudent"));
         try {
-          const loginData = await authService.login(trimmedEmail, password);
+          await authService.login(trimmedEmail, password);
           router.push("/student");
-        } catch (loginErr) {
+        } catch {
           router.push(`/login?registered=1&role=student`);
         }
       }
@@ -123,7 +123,7 @@ function RegisterFormInner() {
       {/* Account Type Selector Tabs */}
       <div className="mb-4">
         <p className="text-xs font-semibold text-slate-700 mb-1.5 text-center sm:text-left">
-          Select Account Type
+          {t("auth.accountType")}
         </p>
         <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl text-xs font-medium">
           <button
@@ -139,7 +139,7 @@ function RegisterFormInner() {
             }`}
           >
             <GraduationCap className="w-4 h-4 text-sky-600" />
-            <span>Student / Candidate</span>
+            <span>{t("auth.student")}</span>
           </button>
           <button
             type="button"
@@ -154,7 +154,7 @@ function RegisterFormInner() {
             }`}
           >
             <UserCheck className="w-4 h-4 text-indigo-600" />
-            <span>Examiner / Instructor</span>
+            <span>{t("auth.examiner")}</span>
           </button>
         </div>
 
@@ -162,7 +162,7 @@ function RegisterFormInner() {
         {role === "examiner" && (
           <div className="mt-2.5 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-            <span>Examiner accounts require administrator approval before you can sign in.</span>
+            <span>{t("auth.examinerApprovalNotice")}</span>
           </div>
         )}
       </div>
@@ -181,7 +181,7 @@ function RegisterFormInner() {
                   href="/login?role=examiner"
                   className="inline-flex items-center justify-center w-full py-2 px-3 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors"
                 >
-                  Return to Sign In
+                  {t("common.signIn")}
                 </Link>
               </div>
             )}
@@ -200,7 +200,7 @@ function RegisterFormInner() {
           {/* Full Name */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Full Name
+              {t("auth.fullName")}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -221,7 +221,7 @@ function RegisterFormInner() {
           {/* Email Address */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Email Address
+              {t("auth.emailAddress")}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -242,7 +242,7 @@ function RegisterFormInner() {
           {/* Password */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Password <span className="text-slate-400 font-normal">(min. 6 characters)</span>
+              {t("auth.password")} <span className="text-slate-400 font-normal">(min. 6 characters)</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -263,7 +263,7 @@ function RegisterFormInner() {
           {/* Confirm Password */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Confirm Password
+              {t("auth.confirmPassword")}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -290,12 +290,14 @@ function RegisterFormInner() {
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Creating Account...</span>
+                <span>{t("auth.creatingAccount")}</span>
               </>
             ) : (
               <>
                 <UserPlus className="w-4 h-4" />
-                <span>Create {role === "examiner" ? "Examiner" : "Student"} Account</span>
+                <span>
+                  {t("auth.registerButton")} ({role === "examiner" ? t("auth.examiner") : t("auth.student")})
+                </span>
               </>
             )}
           </button>
@@ -303,12 +305,12 @@ function RegisterFormInner() {
 
         {/* Navigation to Login */}
         <div className="mt-6 pt-5 border-t border-slate-100 text-center text-xs text-slate-600">
-          Already have an account?{" "}
+          {t("auth.alreadyAccount")}{" "}
           <Link
             href={`/login?role=${role}`}
             className="font-semibold text-indigo-600 hover:text-indigo-700 underline"
           >
-            Sign in
+            {t("common.signIn")}
           </Link>
         </div>
       </div>
@@ -317,17 +319,20 @@ function RegisterFormInner() {
 }
 
 export default function RegisterPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-8 px-4 sm:px-6 lg:px-8">
-      {/* Top back button */}
-      <div className="w-full max-w-md mx-auto mb-4">
+      {/* Top back button and language selector */}
+      <div className="w-full max-w-md mx-auto mb-4 flex items-center justify-between">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Home
+          {t("common.backToHome")}
         </Link>
+        <LanguageSelector />
       </div>
 
       <div className="w-full max-w-md mx-auto text-center mb-4">
@@ -335,10 +340,10 @@ export default function RegisterPage() {
           <ShieldCheck className="w-8 h-8" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-          Create an Account
+          {t("auth.registerTitle")}
         </h1>
         <p className="mt-1.5 text-xs sm:text-sm text-slate-600">
-          Join the AI-Based Examination & Proctoring Platform
+          {t("auth.registerSubtitle")}
         </p>
       </div>
 
@@ -347,7 +352,7 @@ export default function RegisterPage() {
           fallback={
             <div className="bg-white py-12 px-6 shadow-sm rounded-2xl border border-slate-200 text-center">
               <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-              <p className="text-xs text-slate-500 font-medium">Loading registration portal...</p>
+              <p className="text-xs text-slate-500 font-medium">{t("common.loading")}</p>
             </div>
           }
         >

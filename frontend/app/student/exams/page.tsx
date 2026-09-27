@@ -11,6 +11,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { studentApi, Exam } from "@/services/api";
+import ExamInstructionsModal from "@/components/student/ExamInstructionsModal";
 
 export default function StudentExamsPage() {
   const router = useRouter();
@@ -20,7 +21,8 @@ export default function StudentExamsPage() {
   const [search, setSearch] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "upcoming" | "closed">("all");
-  const [enteringId, setEnteringId] = useState<number | null>(null);
+  const [selectedExamForInstructions, setSelectedExamForInstructions] = useState<Exam | null>(null);
+  const [startingExam, setStartingExam] = useState(false);
 
   useEffect(() => {
     loadExams();
@@ -39,15 +41,23 @@ export default function StudentExamsPage() {
     }
   }
 
-  async function handleEnter(examId: number) {
-    setEnteringId(examId);
+  function handleOpenInstructions(exam: Exam) {
+    setSelectedExamForInstructions(exam);
+  }
+
+  async function handleConfirmStartExam(exam: Exam) {
+    setStartingExam(true);
     try {
-      const tokRes = await studentApi.generateExamToken(examId);
-      const session = await studentApi.enterExam(examId, tokRes.access_token);
+      const tokRes = await studentApi.generateExamToken(exam.id);
+      const session = await studentApi.enterExam(exam.id, tokRes.access_token);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(`exam_agreed_${session.id}`, "true");
+      }
+      setSelectedExamForInstructions(null);
       router.push(`/student/exams/${session.id}/take`);
     } catch (err: any) {
       alert(`Could not enter exam: ${err.message}`);
-      setEnteringId(null);
+      setStartingExam(false);
     }
   }
 
@@ -221,20 +231,10 @@ export default function StudentExamsPage() {
                 <div className="pt-5 mt-4 border-t border-slate-100">
                   {isActive ? (
                     <button
-                      onClick={() => handleEnter(exam.id)}
-                      disabled={enteringId === exam.id}
-                      className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                      onClick={() => handleOpenInstructions(exam)}
+                      className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm flex items-center justify-center gap-2"
                     >
-                      {enteringId === exam.id ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Entering Room...
-                        </>
-                      ) : (
-                        <>
-                          Enter Examination <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
+                      Enter Examination <ArrowRight className="w-4 h-4" />
                     </button>
                   ) : isUpcoming ? (
                     <div className="text-center py-2 text-xs font-semibold text-amber-600 bg-amber-50 rounded-xl">
@@ -251,6 +251,15 @@ export default function StudentExamsPage() {
           })}
         </div>
       )}
+
+      {/* Pre-Exam Instructions & Guidelines Modal */}
+      <ExamInstructionsModal
+        isOpen={!!selectedExamForInstructions}
+        onClose={() => setSelectedExamForInstructions(null)}
+        exam={selectedExamForInstructions}
+        onStartExam={handleConfirmStartExam}
+        loading={startingExam}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
@@ -8,12 +8,21 @@ from app.database import get_db
 from app.models.user import User, UserRole
 from app.models.question import QuestionBank, QuestionOption, QuestionType
 from app.models.exam import ExamQuestion
+from app.models.audit import AuditLog
 from app.schemas.question import (
     QuestionCreate,
     QuestionUpdate,
     QuestionResponse,
     QuestionListResponse,
 )
+from app.schemas.question_import import (
+    ImportPreviewResponse,
+    ImportConfirmRequest,
+    ImportConfirmResponse,
+    ExtractedQuestion,
+    ImportedOption,
+)
+from app.services.document_parser import document_parser
 from app.auth.dependencies import get_current_user, require_role
 
 router = APIRouter(prefix="/questions", tags=["Question Bank"])
@@ -114,6 +123,158 @@ async def list_questions(
         items=list(items),
         skip=skip,
         limit=limit,
+    )
+
+@router.post(
+    "/import",
+    response_model=ImportPreviewResponse,
+    summary="Upload and parse document into preview questions"
+)
+async def import_questions_preview(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.EXAMINER, UserRole.ADMIN)),
+):
+    """
+    Accepts an uploaded document (PDF, DOCX, PPTX, TXT, CSV, XLSX, Images),
+    extracts candidate questions, detects question types, options, answers, marks, and subject,
+    identifies possible duplicates against existing questions in the database,
+    and returns a preview without saving to the database.
+    """
+    if not file.filename:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No file provided")
+
+    file_bytes = await file.read()
+    valid, err_msg, ext = document_parser.validate_file(file.filename, file_bytes, file.content_type)
+    if not valid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err_msg)
+
+    try:
+        raw_text, tabular_records = document_parser.extract_raw_text(file_bytes, ext, file.filename)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to process document: {str(e)}"
+        )
+
+    detected_subject = document_parser.detect_subject(raw_text, tabular_records)
+
+    if tabular_records:
+        questions = document_parser.parse_tabular_records(tabular_records, detected_subject)
+    else:
+        questions = document_parser.parse_text_into_questions(raw_text, detected_subject)
+
+    if not questions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No questions could be extracted from the uploaded document. Please check the format."
+        )
+
+    # Duplicate detection against existing questions in DB
+    existing_stmt = select(QuestionBank.id, QuestionBank.question_text)
+    existing_res = await db.execute(existing_stmt)
+    existing_questions = [(row[0], row[1]) for row in existing_res.all()]
+    dup_count = document_parser.detect_duplicates(questions, existing_questions)
+
+    return ImportPreviewResponse(
+        filename=file.filename,
+        file_type=ext.lstrip("."),
+        file_size=len(file_bytes),
+        detected_subject=detected_subject,
+        total_extracted=len(questions),
+        duplicate_count=dup_count,
+        questions=questions,
+    )
+
+@router.post(
+    "/import/confirm",
+    response_model=ImportConfirmResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Confirm and insert approved questions into Question Bank"
+)
+async def confirm_import_questions(
+    request: Request,
+    import_req: ImportConfirmRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.EXAMINER, UserRole.ADMIN)),
+):
+    """
+    Inserts examiner-selected and edited questions into the QuestionBank and QuestionOption tables.
+    Logs an audit event and commits in a single transaction.
+    """
+    if not import_req.questions:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No questions selected for import.")
+
+    created_ids: List[int] = []
+    skipped_count = 0
+
+    for item in import_req.questions:
+        q_text = item.question_text.strip()
+        if not q_text:
+            skipped_count += 1
+            continue
+
+        subj = (item.subject or import_req.default_subject or "General").strip()
+        diff = (item.difficulty or "medium").strip().lower()
+        if diff not in ("easy", "medium", "hard"):
+            diff = "medium"
+
+        # Normalize question type
+        raw_type = item.question_type.upper() if item.question_type else "MCQ"
+        if "MCQ" in raw_type or "TRUE" in raw_type:
+            q_type = QuestionType.MCQ
+        elif "MULTI" in raw_type:
+            q_type = QuestionType.MULTI_SELECT
+        elif "SHORT" in raw_type:
+            q_type = QuestionType.SHORT_ANSWER
+        elif "LONG" in raw_type or "DESCRIPTIVE" in raw_type:
+            q_type = QuestionType.LONG_ANSWER
+        elif "IMAGE" in raw_type:
+            q_type = QuestionType.IMAGE_UPLOAD
+        else:
+            q_type = QuestionType.MCQ if (item.options and len(item.options) >= 2) else QuestionType.SHORT_ANSWER
+
+        question = QuestionBank(
+            subject=subj,
+            question_text=q_text,
+            question_type=q_type,
+            difficulty=diff,
+            marks=max(0.5, float(item.marks or 1.0)),
+            negative_marks=max(0.0, float(item.negative_marks or 0.0)),
+            model_answer=item.model_answer.strip() if item.model_answer else None,
+            expected_answer=item.expected_answer.strip() if item.expected_answer else None,
+            created_by=current_user.id,
+        )
+        db.add(question)
+        await db.flush()
+
+        if item.options and q_type in (QuestionType.MCQ, QuestionType.MULTI_SELECT):
+            for opt in item.options:
+                opt_text = opt.option_text.strip()
+                if not opt_text:
+                    continue
+                db.add(QuestionOption(
+                    question_id=question.id,
+                    option_text=opt_text,
+                    is_correct=bool(opt.is_correct),
+                ))
+
+        created_ids.append(question.id)
+
+    # Log audit entry
+    audit = AuditLog(
+        user_id=current_user.id,
+        action="IMPORT_QUESTIONS",
+        details=f"Bulk imported {len(created_ids)} questions into Question Bank. Subject: {import_req.default_subject or 'Various'}.",
+        ip_address=request.client.host if request.client else None
+    )
+    db.add(audit)
+    await db.commit()
+
+    return ImportConfirmResponse(
+        imported_count=len(created_ids),
+        skipped_count=skipped_count,
+        question_ids=created_ids
     )
 
 @router.get(

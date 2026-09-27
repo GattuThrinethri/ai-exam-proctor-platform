@@ -9,6 +9,7 @@ interface WebcamPreviewProps {
   cameraStatus: CameraStatus;
   faceCount: number;
   isLookingAway: boolean;
+  className?: string;
 }
 
 export const WebcamPreview: React.FC<WebcamPreviewProps> = ({
@@ -16,9 +17,10 @@ export const WebcamPreview: React.FC<WebcamPreviewProps> = ({
   cameraStatus,
   faceCount,
   isLookingAway,
+  className,
 }) => {
   return (
-    <div className="relative w-48 h-36 bg-slate-900 rounded-lg overflow-hidden border border-slate-700 shadow-md">
+    <div className={`relative bg-slate-900 rounded-lg overflow-hidden border border-slate-700 shadow-md ${className || "w-48 h-36"}`}>
       {/* Video Feed */}
       <video
         ref={videoRef}

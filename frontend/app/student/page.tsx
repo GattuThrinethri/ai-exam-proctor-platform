@@ -16,15 +16,19 @@ import {
 } from "lucide-react";
 import { authService, AuthUser } from "@/services/auth";
 import { studentApi, Exam, StudentResultSummary } from "@/services/api";
+import ExamInstructionsModal from "@/components/student/ExamInstructionsModal";
+import { useLanguage } from "@/i18n";
 
 export default function StudentDashboard() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [exams, setExams] = useState<Exam[]>([]);
   const [results, setResults] = useState<StudentResultSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [enteringExamId, setEnteringExamId] = useState<number | null>(null);
+  const [selectedExamForInstructions, setSelectedExamForInstructions] = useState<Exam | null>(null);
+  const [startingExam, setStartingExam] = useState(false);
 
   useEffect(() => {
     const u = authService.getUser();
@@ -49,15 +53,23 @@ export default function StudentDashboard() {
     }
   }
 
-  async function handleEnterExam(examId: number) {
-    setEnteringExamId(examId);
+  function handleOpenInstructions(exam: Exam) {
+    setSelectedExamForInstructions(exam);
+  }
+
+  async function handleConfirmStartExam(exam: Exam) {
+    setStartingExam(true);
     try {
-      const tokRes = await studentApi.generateExamToken(examId);
-      const session = await studentApi.enterExam(examId, tokRes.access_token);
+      const tokRes = await studentApi.generateExamToken(exam.id);
+      const session = await studentApi.enterExam(exam.id, tokRes.access_token);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(`exam_agreed_${session.id}`, "true");
+      }
+      setSelectedExamForInstructions(null);
       router.push(`/student/exams/${session.id}/take`);
     } catch (err: any) {
       alert(`Could not enter exam: ${err.message}`);
-      setEnteringExamId(null);
+      setStartingExam(false);
     }
   }
 
@@ -68,9 +80,10 @@ export default function StudentDashboard() {
     return now >= s && now <= end;
   });
 
+  const publishedResults = results.filter((r) => r.published && r.total_score !== null);
   const completedCount = results.length;
-  const avgScore = completedCount > 0
-    ? (results.reduce((acc, r) => acc + r.total_score, 0) / completedCount).toFixed(1)
+  const avgScore = publishedResults.length > 0
+    ? (publishedResults.reduce((acc, r) => acc + (r.total_score || 0), 0) / publishedResults.length).toFixed(1)
     : "0.0";
 
   const validPercentiles = results.filter((r) => r.percentile !== null).map((r) => r.percentile as number);
@@ -82,13 +95,13 @@ export default function StudentDashboard() {
       <div className="bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg shadow-indigo-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/40 text-indigo-100 border border-indigo-300/30 mb-2">
-            Candidate Overview
+            {t("common.studentPortal")}
           </span>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Welcome back, {user?.name || "Student"}
+            {t("student.welcome", { name: user?.name || "Student" })}
           </h1>
           <p className="mt-1 text-indigo-100 text-sm max-w-xl">
-            Access your active examinations, track your real-time performance analytics, and review AI-evaluated subjective feedback.
+            {t("student.subtitle")}
           </p>
         </div>
 
@@ -96,7 +109,7 @@ export default function StudentDashboard() {
           href="/student/exams"
           className="px-5 py-2.5 rounded-xl bg-white text-indigo-700 font-semibold text-sm hover:bg-indigo-50 transition-all shadow-md flex items-center gap-2 shrink-0"
         >
-          View All Examinations <ArrowRight className="w-4 h-4" />
+          {t("student.availableExams")} <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
 
@@ -107,7 +120,7 @@ export default function StudentDashboard() {
             <Clock className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Active Now</p>
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t("common.active")}</p>
             <p className="text-2xl font-bold text-slate-800">{activeExams.length}</p>
           </div>
         </div>
@@ -117,7 +130,7 @@ export default function StudentDashboard() {
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Completed</p>
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t("common.completed")}</p>
             <p className="text-2xl font-bold text-slate-800">{completedCount}</p>
           </div>
         </div>
@@ -127,7 +140,7 @@ export default function StudentDashboard() {
             <Award className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Average Score</p>
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t("student.averageScore")}</p>
             <p className="text-2xl font-bold text-slate-800">{avgScore}</p>
           </div>
         </div>
@@ -137,7 +150,7 @@ export default function StudentDashboard() {
             <TrendingUp className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Best Percentile</p>
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t("student.percentage")}</p>
             <p className="text-2xl font-bold text-slate-800">
               {bestPercentile !== "-" ? `${bestPercentile}%` : "-"}
             </p>
@@ -198,20 +211,10 @@ export default function StudentDashboard() {
                 </div>
 
                 <button
-                  onClick={() => handleEnterExam(exam.id)}
-                  disabled={enteringExamId === exam.id}
-                  className="px-5 py-2 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2 shrink-0"
+                  onClick={() => handleOpenInstructions(exam)}
+                  className="px-5 py-2 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2 shrink-0"
                 >
-                  {enteringExamId === exam.id ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Entering...
-                    </>
-                  ) : (
-                    <>
-                      Enter Examination <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
+                  {t("student.enterExam")} <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             ))}
@@ -222,7 +225,7 @@ export default function StudentDashboard() {
       {/* Recent Submissions Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-slate-900">Recent Exam Submissions & Results</h2>
+          <h2 className="text-base font-semibold text-slate-900">{t("student.myResults")}</h2>
           <Link href="/student/results" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">
             View All Results &rarr;
           </Link>
@@ -257,10 +260,22 @@ export default function StudentDashboard() {
                       </span>
                     </td>
                     <td className="px-6 py-4 font-bold text-slate-800">
-                      {res.total_score} <span className="text-xs font-normal text-slate-400">/ {res.max_score}</span>
+                      {res.published && res.total_score !== null ? (
+                        <>
+                          {res.total_score} <span className="text-xs font-normal text-slate-400">/ {res.max_score}</span>
+                        </>
+                      ) : (
+                        <span className="inline-flex items-center text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                          Evaluation Pending
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-semibold text-indigo-600">{res.percentage}%</span>
+                      {res.published && res.percentage !== null ? (
+                        <span className="font-semibold text-indigo-600">{res.percentage}%</span>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">Pending</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
@@ -282,6 +297,14 @@ export default function StudentDashboard() {
           </div>
         )}
       </div>
+
+      <ExamInstructionsModal
+        isOpen={!!selectedExamForInstructions}
+        onClose={() => setSelectedExamForInstructions(null)}
+        exam={selectedExamForInstructions}
+        onStartExam={handleConfirmStartExam}
+        loading={startingExam}
+      />
     </div>
   );
 }

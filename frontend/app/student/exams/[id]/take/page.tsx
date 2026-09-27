@@ -19,11 +19,15 @@ import {
   EyeOff,
   Sparkles,
   HelpCircle,
-  FileCheck
+  FileCheck,
+  Maximize2,
+  Minimize2,
+  Image as ImageIcon,
 } from "lucide-react";
-import { studentApi, StudentExamPaper, StudentPaperQuestion } from "@/services/api";
+import { studentApi, StudentExamPaper, StudentPaperQuestion, Exam } from "@/services/api";
 import { authService } from "@/services/auth";
 import { ProctoringMonitor } from "@/components/proctoring/ProctoringMonitor";
+import ExamInstructionsModal from "@/components/student/ExamInstructionsModal";
 
 interface LocalAnswerState {
   selected_option_ids: number[];
@@ -44,6 +48,14 @@ export default function ExamTakePage() {
   const [error, setError] = useState<string | null>(null);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<number, LocalAnswerState>>({});
+
+  // Pre-exam instruction agreement state
+  const [hasConfirmedInstructions, setHasConfirmedInstructions] = useState(() => {
+    if (typeof window !== "undefined" && sessionId) {
+      return sessionStorage.getItem(`exam_agreed_${sessionId}`) === "true";
+    }
+    return false;
+  });
 
   // Server-Authoritative Timer State
   const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
@@ -67,6 +79,52 @@ export default function ExamTakePage() {
 
   // Filter for Palette
   const [paletteFilter, setPaletteFilter] = useState<"all" | "answered" | "unanswered" | "review">("all");
+
+  // Browser Fullscreen API State & Listener
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    function handleFullscreenChange() {
+      if (typeof document !== "undefined") {
+        setIsFullscreen(Boolean(document.fullscreenElement));
+      }
+    }
+    if (typeof document !== "undefined") {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+      document.addEventListener("fullscreenchange", handleFullscreenChange);
+    }
+    return () => {
+      if (typeof document !== "undefined") {
+        document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      }
+    };
+  }, []);
+
+  async function toggleFullscreen() {
+    if (typeof document === "undefined") return;
+    try {
+      if (!document.fullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen().catch(() => {});
+        }
+      }
+    } catch (err) {
+      console.error("Fullscreen toggle error:", err);
+    }
+  }
+
+  // Verify instruction confirmation on session change
+  useEffect(() => {
+    if (typeof window !== "undefined" && sessionId) {
+      if (sessionStorage.getItem(`exam_agreed_${sessionId}`) === "true") {
+        setHasConfirmedInstructions(true);
+      }
+    }
+  }, [sessionId]);
 
   // Load Exam Paper & Initial Answers
   useEffect(() => {
@@ -121,7 +179,7 @@ export default function ExamTakePage() {
 
   // Authoritative Countdown Clock
   useEffect(() => {
-    if (loading || remainingSeconds <= 0 || timerExpired) return;
+    if (loading || remainingSeconds <= 0 || timerExpired || !hasConfirmedInstructions) return;
 
     const interval = setInterval(() => {
       setRemainingSeconds((prev) => {
@@ -136,11 +194,11 @@ export default function ExamTakePage() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [loading, remainingSeconds, timerExpired]);
+  }, [loading, remainingSeconds, timerExpired, hasConfirmedInstructions]);
 
   // Periodic Server Time Sync (every 60s)
   useEffect(() => {
-    if (loading || timerExpired) return;
+    if (loading || timerExpired || !hasConfirmedInstructions) return;
 
     const syncInterval = setInterval(async () => {
       try {
@@ -156,12 +214,12 @@ export default function ExamTakePage() {
     }, 60000);
 
     return () => clearInterval(syncInterval);
-  }, [sessionId, loading, timerExpired]);
+  }, [sessionId, loading, timerExpired, hasConfirmedInstructions]);
 
   // Handle Tab Switch / Window Blur Event
   useEffect(() => {
     function handleVisibilityChange() {
-      if (document.hidden && paper?.proctoring_enabled && !timerExpired) {
+      if (document.hidden && paper?.proctoring_enabled && !timerExpired && hasConfirmedInstructions) {
         setProctorWarning("Tab switch detected. Please maintain continuous focus on the exam window.");
         setTimeout(() => setProctorWarning(null), 6000);
       }
@@ -169,7 +227,7 @@ export default function ExamTakePage() {
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [paper, timerExpired]);
+  }, [paper, timerExpired, hasConfirmedInstructions]);
 
   // Debounced Autosave Trigger
   const triggerAutosave = useCallback(
@@ -342,6 +400,42 @@ export default function ExamTakePage() {
     );
   }
 
+  // Direct URL Guard: Student must confirm instructions before viewing question paper
+  if (!hasConfirmedInstructions && paper) {
+    const examEquivalent: Exam = {
+      id: paper.exam_id,
+      title: paper.title,
+      subject: paper.subject,
+      description: paper.description,
+      duration: paper.duration_minutes,
+      question_count: paper.questions.length,
+      start_time: paper.started_at || "",
+      end_time: "",
+      randomization_enabled: false,
+      negative_marking_enabled: false,
+      proctoring_enabled: paper.proctoring_enabled,
+      gaze_sensitivity: "medium",
+      max_tab_switch_warnings: 3,
+      total_marks: paper.questions.reduce((acc, q) => acc + (q.marks || 1), 0),
+    };
+
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <ExamInstructionsModal
+          isOpen={true}
+          onClose={() => router.replace("/student/exams")}
+          exam={examEquivalent}
+          onStartExam={async () => {
+            if (typeof window !== "undefined") {
+              sessionStorage.setItem(`exam_agreed_${sessionId}`, "true");
+            }
+            setHasConfirmedInstructions(true);
+          }}
+        />
+      </div>
+    );
+  }
+
   const currentQ: StudentPaperQuestion = paper.questions[currentIdx];
   const currentAns = answers[currentQ?.id] || {
     selected_option_ids: [],
@@ -440,6 +534,18 @@ export default function ExamTakePage() {
             </button>
           )}
 
+          {/* Fullscreen Mode Toggle Button */}
+          <button
+            onClick={toggleFullscreen}
+            className={`p-1.5 sm:p-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+              isFullscreen ? "bg-slate-800 text-emerald-400 border border-emerald-500/40" : "bg-slate-800/60 text-slate-400 hover:text-white"
+            }`}
+            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            <span className="hidden sm:inline">{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</span>
+          </button>
+
           <button
             onClick={() => setShowSubmitModal(true)}
             className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-emerald-600 text-white font-semibold text-xs sm:text-sm hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-1 whitespace-nowrap"
@@ -463,10 +569,10 @@ export default function ExamTakePage() {
         </div>
       )}
 
-      {/* Main Examination Workspace */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Column: Active Question Workspace (3 Cols) */}
-        <div className="lg:col-span-3 space-y-6 flex flex-col justify-between">
+      {/* Main Examination Workspace - Full Window Viewport */}
+      <div className="flex-1 w-full px-3 sm:px-5 lg:px-8 py-4 lg:py-6 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
+        {/* Left Column: Active Question Workspace (Spans 8 cols on laptop, 9 on desktop) */}
+        <div className="lg:col-span-8 xl:col-span-9 space-y-5 flex flex-col justify-between">
           <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
             {/* Question Header Meta */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
@@ -475,7 +581,7 @@ export default function ExamTakePage() {
                   Question {currentIdx + 1}
                 </span>
                 <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 uppercase">
-                  {currentQ.question_type}
+                  {(currentQ.question_type || "").replace(/_/g, " ")}
                 </span>
                 <span className="text-xs text-slate-400 capitalize">Difficulty: {currentQ.difficulty}</span>
               </div>
@@ -517,178 +623,202 @@ export default function ExamTakePage() {
 
             {/* Answer Input Components */}
             <div className="pt-4 border-t border-slate-100 space-y-4">
-              {/* Type 1: MCQ (Single Select Radio Cards) */}
-              {currentQ.question_type === "MCQ" && (
-                <div className="space-y-2.5">
-                  {currentQ.options.map((opt) => {
-                    const isSelected = currentAns.selected_option_ids.includes(opt.id);
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => updateCurrentAnswer({ selected_option_ids: [opt.id] })}
-                        className={`w-full p-4 rounded-xl border text-left text-sm flex items-center justify-between transition-all ${
-                          isSelected
-                            ? "bg-indigo-50/80 border-indigo-600 ring-2 ring-indigo-600 text-indigo-950 font-semibold"
-                            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-                        }`}
-                      >
-                        <span className="flex items-center gap-3">
-                          <span
-                            className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                              isSelected ? "border-indigo-600 bg-indigo-600 text-white" : "border-slate-300"
-                            }`}
-                          >
-                            {isSelected && <span className="w-2 h-2 rounded-full bg-white"></span>}
-                          </span>
-                          {opt.option_text}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+              {(() => {
+                const normType = (currentQ.question_type || "").toString().toLowerCase().trim().replace(/[\s-]+/g, "_");
+                const isMCQ = normType === "mcq";
+                const isMultiSelect = normType === "multi_select" || normType === "multiselect";
+                const isShortAnswer = normType === "short_answer" || normType === "short";
+                const isLongAnswer = normType === "long_answer" || normType === "long";
+                const isImageUpload = normType === "image_upload" || normType === "image";
 
-              {/* Type 2: MULTI_SELECT (Checkboxes) */}
-              {currentQ.question_type === "MULTI_SELECT" && (
-                <div className="space-y-2.5">
-                  <p className="text-xs text-indigo-600 font-medium mb-1">
-                    Select all options that apply:
-                  </p>
-                  {currentQ.options.map((opt) => {
-                    const isSelected = currentAns.selected_option_ids.includes(opt.id);
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => {
-                          const currentIds = currentAns.selected_option_ids;
-                          const nextIds = isSelected
-                            ? currentIds.filter((id) => id !== opt.id)
-                            : [...currentIds, opt.id];
-                          updateCurrentAnswer({ selected_option_ids: nextIds });
-                        }}
-                        className={`w-full p-4 rounded-xl border text-left text-sm flex items-center justify-between transition-all ${
-                          isSelected
-                            ? "bg-indigo-50/80 border-indigo-600 ring-2 ring-indigo-600 text-indigo-950 font-semibold"
-                            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-                        }`}
-                      >
-                        <span className="flex items-center gap-3">
-                          <span
-                            className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
-                              isSelected ? "border-indigo-600 bg-indigo-600 text-white" : "border-slate-300"
-                            }`}
-                          >
-                            {isSelected && <Check className="w-3.5 h-3.5" />}
-                          </span>
-                          {opt.option_text}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Type 3: SHORT_ANSWER (Text Input) */}
-              {currentQ.question_type === "SHORT_ANSWER" && (
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                    Your Short Response
-                  </label>
-                  <input
-                    type="text"
-                    value={currentAns.answer_text}
-                    onChange={(e) => updateCurrentAnswer({ answer_text: e.target.value })}
-                    placeholder="Type your concise answer here..."
-                    className="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900"
-                  />
-                  <p className="text-right text-xs text-slate-400">
-                    {currentAns.answer_text.length} characters
-                  </p>
-                </div>
-              )}
-
-              {/* Type 4: LONG_ANSWER (Rich Multi-Line Essay) */}
-              {currentQ.question_type === "LONG_ANSWER" && (
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                    Detailed Essay / Subjective Response
-                  </label>
-                  <textarea
-                    rows={8}
-                    value={currentAns.answer_text}
-                    onChange={(e) => updateCurrentAnswer({ answer_text: e.target.value })}
-                    placeholder="Provide your comprehensive explanation, proofs, and structured analysis..."
-                    className="w-full p-4 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 leading-relaxed resize-y"
-                  ></textarea>
-                  <div className="flex justify-between items-center text-xs text-slate-400">
-                    <span>Organize your response with clear paragraphs</span>
-                    <span>
-                      Words: {currentAns.answer_text.trim() ? currentAns.answer_text.trim().split(/\s+/).length : 0}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Type 5: IMAGE_UPLOAD (Handwritten Answer Sheet + OCR) */}
-              {currentQ.question_type === "IMAGE_UPLOAD" && (
-                <div className="space-y-4">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                    Handwritten Answer Sheet Upload
-                  </label>
-
-                  {/* Dropzone & Selector */}
-                  <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:bg-slate-50 transition-colors">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleImageUpload}
-                      accept="image/jpeg,image/png,image/jpg"
-                      className="hidden"
-                      id="handwritten-upload"
-                    />
-                    <label htmlFor="handwritten-upload" className="cursor-pointer space-y-2 block">
-                      <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
-                        <Upload className="w-6 h-6" />
+                return (
+                  <>
+                    {/* Type 1: MCQ (Single Select Radio Cards) */}
+                    {isMCQ && (
+                      <div className="space-y-2.5">
+                        {currentQ.options.map((opt) => {
+                          const isSelected = currentAns.selected_option_ids.includes(opt.id);
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => updateCurrentAnswer({ selected_option_ids: [opt.id] })}
+                              className={`w-full p-4 rounded-xl border text-left text-sm flex items-center justify-between transition-all ${
+                                isSelected
+                                  ? "bg-indigo-50/80 border-indigo-600 ring-2 ring-indigo-600 text-indigo-950 font-semibold"
+                                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                              }`}
+                            >
+                              <span className="flex items-center gap-3">
+                                <span
+                                  className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
+                                    isSelected ? "border-indigo-600 bg-indigo-600 text-white" : "border-slate-300"
+                                  }`}
+                                >
+                                  {isSelected && <span className="w-2 h-2 rounded-full bg-white"></span>}
+                                </span>
+                                {opt.option_text}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
-                      <p className="text-sm font-semibold text-slate-800">
-                        {uploadingImage ? "Uploading & extracting OCR text..." : "Click to select your handwritten answer page"}
-                      </p>
-                      <p className="text-xs text-slate-400">Supports JPG, PNG up to 10MB</p>
-                    </label>
-                  </div>
+                    )}
 
-                  {/* Uploaded Image Preview & OCR Text */}
-                  {currentAns.image_url && (
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
-                          <CheckCircle className="w-4 h-4" /> Handwritten Page Uploaded
-                        </span>
-                        <button
-                          type="button"
-                          onClick={handleClearAnswer}
-                          className="text-xs text-red-600 hover:underline"
-                        >
-                          Remove Image
-                        </button>
+                    {/* Type 2: MULTI_SELECT (Checkboxes) */}
+                    {isMultiSelect && (
+                      <div className="space-y-2.5">
+                        <p className="text-xs text-indigo-600 font-medium mb-1">
+                          Select all options that apply:
+                        </p>
+                        {currentQ.options.map((opt) => {
+                          const isSelected = currentAns.selected_option_ids.includes(opt.id);
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => {
+                                const currentIds = currentAns.selected_option_ids;
+                                const nextIds = isSelected
+                                  ? currentIds.filter((id) => id !== opt.id)
+                                  : [...currentIds, opt.id];
+                                updateCurrentAnswer({ selected_option_ids: nextIds });
+                              }}
+                              className={`w-full p-4 rounded-xl border text-left text-sm flex items-center justify-between transition-all ${
+                                isSelected
+                                  ? "bg-indigo-50/80 border-indigo-600 ring-2 ring-indigo-600 text-indigo-950 font-semibold"
+                                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                              }`}
+                            >
+                              <span className="flex items-center gap-3">
+                                <span
+                                  className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
+                                    isSelected ? "border-indigo-600 bg-indigo-600 text-white" : "border-slate-300"
+                                  }`}
+                                >
+                                  {isSelected && <Check className="w-3.5 h-3.5" />}
+                                </span>
+                                {opt.option_text}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
-                      <img
-                        src={currentAns.image_url}
-                        alt="Uploaded answer sheet"
-                        className="max-h-60 rounded-xl border border-slate-200 object-contain bg-white mx-auto"
-                      />
-                      {currentAns.ocr_text && (
-                        <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-700">
-                          <span className="font-semibold text-slate-500 block mb-1">OCR Extracted Preview:</span>
-                          <p className="italic font-mono text-[11px] line-clamp-3">{currentAns.ocr_text}</p>
+                    )}
+
+                    {/* Type 3: SHORT_ANSWER (Comfortable Multi-Line Textarea) */}
+                    {isShortAnswer && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label htmlFor="student-short-answer-input" className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                            Student Answer (Short Answer)
+                          </label>
+                          <span className="text-xs text-slate-400">
+                            {currentAns.answer_text.length} characters
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+                        <textarea
+                          id="student-short-answer-input"
+                          rows={5}
+                          value={currentAns.answer_text}
+                          onChange={(e) => updateCurrentAnswer({ answer_text: e.target.value })}
+                          placeholder="Type your concise response here (e.g. definitions, brief explanations, direct answers)..."
+                          className="w-full min-h-[140px] p-3.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-indigo-500 text-slate-900 leading-relaxed resize-y shadow-inner"
+                        />
+                        <div className="flex justify-between items-center text-xs text-slate-400">
+                          <span>Supports multiple lines &bull; Press Enter for new lines</span>
+                          <span className="text-emerald-600 font-medium">Autosave enabled</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Type 4: LONG_ANSWER (Rich Multi-Line Essay Editor) */}
+                    {isLongAnswer && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label htmlFor="student-long-answer-input" className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                            Student Answer (Long Answer)
+                          </label>
+                          <div className="flex items-center gap-3 text-xs text-slate-400">
+                            <span>{currentAns.answer_text.length} characters</span>
+                            <span>&bull;</span>
+                            <span>
+                              Words: {currentAns.answer_text.trim() ? currentAns.answer_text.trim().split(/\s+/).length : 0}
+                            </span>
+                          </div>
+                        </div>
+                        <textarea
+                          id="student-long-answer-input"
+                          rows={12}
+                          value={currentAns.answer_text}
+                          onChange={(e) => updateCurrentAnswer({ answer_text: e.target.value })}
+                          placeholder="Provide your comprehensive explanation, proofs, step-by-step reasoning, and structured analysis..."
+                          className="w-full min-h-[300px] p-4 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-indigo-500 text-slate-900 leading-relaxed resize-y font-normal shadow-inner"
+                        ></textarea>
+                        <div className="flex justify-between items-center text-xs text-slate-400">
+                          <span>Organize your response with clear paragraphs, headings, or bullet points</span>
+                          <span className="text-emerald-600 font-medium">Autosave enabled</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Type 5: IMAGE_UPLOAD (Handwritten Answer Sheet + OCR) */}
+                    {isImageUpload && (
+                      <div className="space-y-4">
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+                          Handwritten Answer Sheet Upload
+                        </label>
+
+                        {/* Dropzone & Selector */}
+                        <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:bg-slate-50 transition-colors">
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleImageUpload}
+                            accept="image/jpeg,image/png,image/jpg"
+                            className="hidden"
+                            id="handwritten-upload"
+                          />
+                          <ImageIcon className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+                          <p className="text-sm font-semibold text-slate-700">Upload handwritten answer sheet</p>
+                          <p className="text-xs text-slate-400 mt-1">JPEG, JPG, or PNG (Max 10MB)</p>
+                          <label
+                            htmlFor="handwritten-upload"
+                            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold cursor-pointer shadow-sm transition-colors"
+                          >
+                            Select Image File
+                          </label>
+                        </div>
+
+                        {/* Upload Status / Preview */}
+                        {uploadingImage && (
+                          <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center justify-center gap-2 text-indigo-700 text-xs font-medium">
+                            <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                            Uploading image and performing OCR transcription...
+                          </div>
+                        )}
+
+                        {currentAns.image_url && (
+                          <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                            <p className="text-xs font-semibold text-slate-700">Uploaded Sheet:</p>
+                            <img
+                              src={currentAns.image_url}
+                              alt="Uploaded answer sheet"
+                              className="max-h-64 rounded-lg border border-slate-300 object-contain mx-auto bg-white"
+                            />
+                            {currentAns.ocr_text && (
+                              <div className="p-3 bg-white rounded-lg border border-slate-200 text-xs text-slate-600">
+                                <span className="font-semibold block mb-1">OCR Transcribed Text:</span>
+                                <p className="italic font-mono">{currentAns.ocr_text}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -736,28 +866,28 @@ export default function ExamTakePage() {
           </div>
         </div>
 
-        {/* Right Column: Question Palette & Proctor Monitor (1 Col) */}
-        <div className="space-y-6">
-          {/* Proctoring Sidecar Live Monitor */}
+        {/* Right Column: Question Palette & Proctor Monitor (Sticky Sidebar) */}
+        <div className="lg:col-span-4 xl:col-span-3 space-y-4 sticky top-16">
+          {/* 1. Live Proctoring Webcam (Permanently positioned above question numbers) */}
           {paper.proctoring_enabled && showProctorCam && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3">
+            <div className="bg-white rounded-2xl border border-slate-200 p-3.5 sm:p-4 shadow-sm space-y-2.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-semibold text-slate-800 flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-indigo-600" /> Live Proctoring Active
                 </span>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               </div>
-              <div className="rounded-xl overflow-hidden border border-slate-200 aspect-video bg-black">
-                <ProctoringMonitor sessionId={sessionId} token={authService.getToken() || ""} />
+              <div className="rounded-xl overflow-hidden border border-slate-200 aspect-video bg-black w-full flex items-center justify-center">
+                <ProctoringMonitor sessionId={sessionId} token={authService.getToken() || ""} embedded={true} />
               </div>
               <p className="text-[11px] text-slate-400 text-center leading-tight">
-                Camera analysis processes facial orientation on-device.
+                Facial orientation analysis active &bull; Keep face centered in frame
               </p>
             </div>
           )}
 
-          {/* Question Navigator Palette */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+          {/* 2. Question Navigator Palette (Directly below webcam) */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900">Question Palette</h3>
               <span className="text-xs font-semibold text-indigo-600">

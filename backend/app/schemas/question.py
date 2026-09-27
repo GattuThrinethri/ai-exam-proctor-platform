@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field, ConfigDict, model_validator
+from pydantic import BaseModel, Field, ConfigDict, model_validator, field_validator
 from app.models.question import QuestionType
 
 class QuestionOptionBase(BaseModel):
@@ -24,6 +24,18 @@ class QuestionBase(BaseModel):
     model_answer: Optional[str] = None
     expected_answer: Optional[str] = None
     image_url: Optional[str] = None
+
+    @field_validator("question_type", mode="before")
+    @classmethod
+    def normalize_question_type(cls, v):
+        if isinstance(v, str):
+            v_clean = v.strip()
+            if v_clean.upper() == "MCQ":
+                return QuestionType.MCQ
+            for qt in QuestionType:
+                if qt.value.lower() == v_clean.lower() or qt.name.lower() == v_clean.lower():
+                    return qt
+        return v
 
 class QuestionCreate(QuestionBase):
     options: Optional[List[QuestionOptionCreate]] = None
@@ -81,6 +93,18 @@ class QuestionUpdate(BaseModel):
     expected_answer: Optional[str] = None
     image_url: Optional[str] = None
     options: Optional[List[QuestionOptionCreate]] = None
+
+    @field_validator("question_type", mode="before")
+    @classmethod
+    def normalize_question_type(cls, v):
+        if isinstance(v, str):
+            v_clean = v.strip()
+            if v_clean.upper() == "MCQ":
+                return QuestionType.MCQ
+            for qt in QuestionType:
+                if qt.value.lower() == v_clean.lower() or qt.name.lower() == v_clean.lower():
+                    return qt
+        return v
 
     @model_validator(mode="after")
     def validate_update_rules(self):

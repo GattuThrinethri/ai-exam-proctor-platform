@@ -1,0 +1,274 @@
+/**
+ * i18n Types Definition
+ * Defines supported languages, dictionary schema, and context interface.
+ */
+
+export type LanguageCode = "en" | "te" | "hi" | "kn" | "ml" | "ta";
+
+export interface LanguageInfo {
+  code: LanguageCode;
+  name: string;
+  nativeName: string;
+}
+
+export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
+  { code: "en", name: "English", nativeName: "English" },
+  { code: "te", name: "Telugu", nativeName: "తెలుగు" },
+  { code: "hi", name: "Hindi", nativeName: "हिन्दी" },
+  { code: "kn", name: "Kannada", nativeName: "ಕನ್ನಡ" },
+  { code: "ml", name: "Malayalam", nativeName: "മലയാളം" },
+  { code: "ta", name: "Tamil", nativeName: "தமிழ்" },
+];
+
+export interface TranslationDictionary {
+  common: {
+    appName: string;
+    platformTitle: string;
+    portal: string;
+    adminPortal: string;
+    examinerPortal: string;
+    studentPortal: string;
+    home: string;
+    backToHome: string;
+    loading: string;
+    cancel: string;
+    save: string;
+    submit: string;
+    delete: string;
+    edit: string;
+    actions: string;
+    status: string;
+    active: string;
+    inactive: string;
+    pending: string;
+    approved: string;
+    rejected: string;
+    completed: string;
+    inProgress: string;
+    pendingEvaluation: string;
+    evaluationPending: string;
+    evaluated: string;
+    submitted: string;
+    draft: string;
+    logout: string;
+    signOut: string;
+    signIn: string;
+    close: string;
+    search: string;
+    filter: string;
+    all: string;
+    yes: string;
+    no: string;
+    confirm: string;
+    error: string;
+    success: string;
+    warning: string;
+    language: string;
+    selectLanguage: string;
+    total: string;
+    view: string;
+    details: string;
+    refresh: string;
+    clear: string;
+    online: string;
+    offline: string;
+    accessDenied: string;
+    accessDeniedDesc: string;
+  };
+  nav: {
+    overview: string;
+    dashboard: string;
+    userManagement: string;
+    pendingExaminers: string;
+    examOversight: string;
+    auditLogs: string;
+    questionBank: string;
+    exams: string;
+    availableExams: string;
+    myResults: string;
+    examResults: string;
+    proctoringReview: string;
+    settings: string;
+  };
+  auth: {
+    signInTitle: string;
+    signInSubtitle: string;
+    emailAddress: string;
+    password: string;
+    confirmPassword: string;
+    fullName: string;
+    accountType: string;
+    student: string;
+    examiner: string;
+    admin: string;
+    signInButton: string;
+    authenticating: string;
+    noAccount: string;
+    createOne: string;
+    alreadyAccount: string;
+    demoCredentials: string;
+    registerTitle: string;
+    registerSubtitle: string;
+    registerButton: string;
+    creatingAccount: string;
+    examinerApprovalNotice: string;
+    regSuccessStudent: string;
+    regSuccessExaminer: string;
+    invalidCredentials: string;
+    passwordsDoNotMatch: string;
+    sessionExpired: string;
+    accountCreatedSuccess: string;
+  };
+  student: {
+    welcome: string;
+    subtitle: string;
+    availableExams: string;
+    myResults: string;
+    upcomingAssessments: string;
+    completedExams: string;
+    averageScore: string;
+    totalExamsAttempted: string;
+    enterExam: string;
+    viewResult: string;
+    duration: string;
+    durationMins: string;
+    questions: string;
+    marks: string;
+    totalMarks: string;
+    passingScore: string;
+    proctoring: string;
+    aiActive: string;
+    disabled: string;
+    noExams: string;
+    noResults: string;
+    resultDetails: string;
+    score: string;
+    percentage: string;
+    passed: string;
+    failed: string;
+    verifyingCredentials: string;
+    examSubmitted: string;
+    evaluationPendingNotice: string;
+    shortAnswerPlaceholder: string;
+    longAnswerPlaceholder: string;
+    autosaved: string;
+    finishAndSubmit: string;
+    nextQuestion: string;
+    previousQuestion: string;
+    questionNumber: string;
+  };
+  examiner: {
+    dashboard: string;
+    subtitle: string;
+    totalQuestions: string;
+    totalExams: string;
+    pendingEvaluations: string;
+    completedResults: string;
+    questionBank: string;
+    createQuestion: string;
+    importQuestions: string;
+    extractQuestions: string;
+    filterSubject: string;
+    filterType: string;
+    filterDifficulty: string;
+    allSubjects: string;
+    allTypes: string;
+    allDifficulties: string;
+    mcq: string;
+    shortAnswer: string;
+    longAnswer: string;
+    code: string;
+    easy: string;
+    medium: string;
+    hard: string;
+    evaluate: string;
+    viewDetails: string;
+    publishExam: string;
+    createExam: string;
+    verifyingCredentials: string;
+    candidateName: string;
+    examTitle: string;
+    submittedAt: string;
+    evaluationStatus: string;
+    pendingReview: string;
+    evaluatedStatus: string;
+    questionText: string;
+    studentAnswer: string;
+    correctAnswer: string;
+    awardedMarks: string;
+    feedbackOptional: string;
+    saveEvaluation: string;
+    finalizeEvaluation: string;
+  };
+  admin: {
+    overview: string;
+    subtitle: string;
+    totalUsers: string;
+    pendingApprovals: string;
+    activeExams: string;
+    auditEvents: string;
+    approve: string;
+    reject: string;
+    userList: string;
+    pendingExaminers: string;
+    examOversight: string;
+    auditLogs: string;
+    verifyingCredentials: string;
+    roleClearance: string;
+    securityNotice: string;
+  };
+  instructions: {
+    title: string;
+    subtitle: string;
+    importantInstructions: string;
+    configuredSafeguards: string;
+    tabSwitchWarnings: string;
+    gazeSensitivity: string;
+    negativePenalty: string;
+    maxWarnings: string;
+    notEnforced: string;
+    activePenalty: string;
+    noPenalty: string;
+    liveSession: string;
+    internetStabilityTitle: string;
+    internetStabilityRule: string;
+    timerTitle: string;
+    timerRule: string;
+    windowFocusTitle: string;
+    windowFocusRule: string;
+    webcamTitle: string;
+    webcamRule: string;
+    gazeTitle: string;
+    gazeRule: string;
+    browserActionsTitle: string;
+    browserActionsRule: string;
+    submissionTitle: string;
+    submissionRule: string;
+    resumptionTitle: string;
+    resumptionRule: string;
+    agreementText: string;
+    agreementAcknowledged: string;
+    agreementRequired: string;
+    startExamButton: string;
+    enteringRoom: string;
+  };
+  evaluation: {
+    pendingTitle: string;
+    pendingDesc: string;
+    finalScorePending: string;
+    manualEvaluationNotice: string;
+    examinerFeedback: string;
+    awardedMarks: string;
+    maxMarks: string;
+    finalizeEvaluation: string;
+    savingEvaluation: string;
+    evaluationSaved: string;
+  };
+}
+
+export interface LanguageContextType {
+  language: LanguageCode;
+  setLanguage: (lang: LanguageCode) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  languages: LanguageInfo[];
+}

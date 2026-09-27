@@ -53,8 +53,8 @@ async def get_my_results(
 
     items: List[StudentResultSummaryItem] = []
     for result_obj, session_obj, exam_obj in rows:
-        # Recompute percentile if missing
-        if result_obj.percentile is None:
+        # Recompute percentile if missing and published
+        if result_obj.percentile is None and result_obj.published:
             await calculate_exam_percentiles(exam_obj.id, db)
             await db.refresh(result_obj)
 
@@ -69,6 +69,11 @@ async def get_my_results(
 
         percentage = round((result_obj.total_score / max_marks) * 100.0, 2) if max_marks > 0 else 0.0
 
+        is_pending = not result_obj.published and current_user.role == UserRole.STUDENT
+        status_display = "evaluation_pending" if is_pending else (
+            session_obj.status.value if hasattr(session_obj.status, "value") else str(session_obj.status)
+        )
+
         items.append(
             StudentResultSummaryItem(
                 id=result_obj.id,
@@ -76,14 +81,15 @@ async def get_my_results(
                 exam_id=exam_obj.id,
                 exam_title=exam_obj.title,
                 subject=exam_obj.subject,
-                total_score=result_obj.total_score,
+                total_score=None if is_pending else result_obj.total_score,
                 max_score=max_marks,
-                objective_score=result_obj.objective_score,
-                subjective_score=result_obj.subjective_score,
-                percentage=percentage,
-                percentile=result_obj.percentile,
-                status=session_obj.status.value if hasattr(session_obj.status, "value") else str(session_obj.status),
+                objective_score=None if is_pending else result_obj.objective_score,
+                subjective_score=None if is_pending else result_obj.subjective_score,
+                percentage=None if is_pending else percentage,
+                percentile=None if is_pending else result_obj.percentile,
+                status=status_display,
                 published=result_obj.published,
+                requires_manual_evaluation=not result_obj.published,
                 submitted_at=session_obj.submitted_at,
                 generated_at=result_obj.generated_at,
             )
@@ -106,8 +112,8 @@ async def get_session_result(
     Comprehensive result breakdown.
     Enforces result privacy:
     - Students can only view their own results.
-    - If result is NOT published and user is a student, solution reviews/AI feedback are masked.
-    - Authoritative percentile calculation and objective vs subjective breakdown.
+    - If result is NOT published and user is a student, scores, percentage, percentile, and solutions are masked.
+    - Authoritative percentile calculation and objective vs subjective breakdown when published.
     """
     stmt = (
         select(Result, ExamSession, Exam)
@@ -133,8 +139,12 @@ async def get_session_result(
             detail="Access forbidden: You cannot view another student's exam results."
         )
 
-    # Ensure percentile is calculated
-    if result_obj.percentile is None:
+    is_privileged = current_user.role in (UserRole.EXAMINER, UserRole.ADMIN)
+    can_view_solutions = result_obj.published or is_privileged
+    is_pending = not result_obj.published and not is_privileged
+
+    # Ensure percentile is calculated when published
+    if result_obj.percentile is None and result_obj.published:
         await calculate_exam_percentiles(exam_obj.id, db)
         await db.refresh(result_obj)
 
@@ -147,6 +157,10 @@ async def get_session_result(
     m_res = await db.execute(marks_stmt)
     max_marks = float(m_res.scalar() or 0.0)
     percentage = round((result_obj.total_score / max_marks) * 100.0, 2) if max_marks > 0 else 0.0
+
+    status_display = "evaluation_pending" if is_pending else (
+        session_obj.status.value if hasattr(session_obj.status, "value") else str(session_obj.status)
+    )
 
     # Load questions and answers for detailed review
     q_stmt = (
@@ -164,9 +178,6 @@ async def get_session_result(
     ans_res = await db.execute(ans_stmt)
     answers_by_qid = {ans.question_id: ans for ans in ans_res.scalars().all()}
 
-    is_privileged = current_user.role in (UserRole.EXAMINER, UserRole.ADMIN)
-    can_view_solutions = result_obj.published or is_privileged
-
     reviews: List[QuestionReviewItem] = []
     for eq in exam_questions:
         q = eq.question
@@ -174,10 +185,11 @@ async def get_session_result(
             continue
         ans = answers_by_qid.get(q.id)
 
-        # Awarded marks
-        awarded = 0.0
-        if ans:
-            awarded = (ans.auto_score or 0.0) + (ans.ai_score or 0.0)
+        # Awarded marks - strictly masked if pending student view
+        awarded_score_val = None
+        if not is_pending and ans:
+            subj_score = ans.examiner_score if ans.examiner_score is not None else (ans.ai_score or 0.0)
+            awarded_score_val = round((ans.auto_score or 0.0) + subj_score, 2)
 
         # Options list sanitized for student
         options_data = None
@@ -206,7 +218,7 @@ async def get_session_result(
                 question_type=q.question_type.value if hasattr(q.question_type, "value") else str(q.question_type),
                 difficulty=q.difficulty,
                 marks=q.marks,
-                awarded_score=round(awarded, 2),
+                awarded_score=awarded_score_val,
                 student_selected_option_ids=ans.selected_option_ids if ans else None,
                 student_answer_text=ans.answer_text if ans else None,
                 student_image_url=ans.image_url if ans else None,
@@ -226,15 +238,16 @@ async def get_session_result(
         exam_id=exam_obj.id,
         exam_title=exam_obj.title,
         subject=exam_obj.subject,
-        total_score=result_obj.total_score,
+        total_score=None if is_pending else result_obj.total_score,
         max_score=max_marks,
-        objective_score=result_obj.objective_score,
-        subjective_score=result_obj.subjective_score,
-        percentage=percentage,
-        percentile=result_obj.percentile,
+        objective_score=None if is_pending else result_obj.objective_score,
+        subjective_score=None if is_pending else result_obj.subjective_score,
+        percentage=None if is_pending else percentage,
+        percentile=None if is_pending else result_obj.percentile,
         suspicion_score=session_obj.suspicion_score or 0,
-        status=session_obj.status.value if hasattr(session_obj.status, "value") else str(session_obj.status),
+        status=status_display,
         published=result_obj.published,
+        requires_manual_evaluation=not result_obj.published,
         submitted_at=session_obj.submitted_at,
         generated_at=result_obj.generated_at,
         question_reviews=reviews,

@@ -78,24 +78,40 @@ export default function StudentResultsPage() {
                       </td>
                       <td className="px-6 py-4 text-xs text-slate-500">{subDate}</td>
                       <td className="px-6 py-4 font-bold text-slate-900">
-                        {res.total_score} <span className="text-xs font-normal text-slate-400">/ {res.max_score}</span>
+                        {res.published && res.total_score !== null ? (
+                          <>
+                            {res.total_score} <span className="text-xs font-normal text-slate-400">/ {res.max_score}</span>
+                          </>
+                        ) : (
+                          <span className="inline-flex items-center text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                            Evaluation Pending
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-semibold text-indigo-600">{res.percentage}%</span>
+                        {res.published && res.percentage !== null ? (
+                          <span className="font-semibold text-indigo-600">{res.percentage}%</span>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">Pending</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                          {res.percentile !== null ? `Percentile rank: ${res.percentile}%` : "100.00%"}
-                        </span>
+                        {res.published && res.percentile !== null ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                            Percentile rank: {res.percentile}%
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">Pending</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         {res.published ? (
                           <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Solutions Published
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Published
                           </span>
                         ) : (
                           <span className="inline-flex items-center text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                            Under Review
+                            Evaluation Pending
                           </span>
                         )}
                       </td>
@@ -104,7 +120,7 @@ export default function StudentResultsPage() {
                           href={`/student/results/${res.session_id}`}
                           className="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 font-semibold text-xs hover:bg-indigo-100 transition-colors"
                         >
-                          View Analysis &rarr;
+                          {res.published ? "View Analysis →" : "View Status →"}
                         </Link>
                       </td>
                     </tr>

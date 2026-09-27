@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "next lint",
-    "test": "node --experimental-strip-types tests/proctoring.test.ts && node --experimental-strip-types tests/examiner.test.ts && node --experimental-strip-types tests/student.test.ts && node --experimental-strip-types tests/admin.test.ts && node --experimental-strip-types tests/registration.test.ts"
+    "test": "node --experimental-strip-types tests/proctoring.test.ts && node --experimental-strip-types tests/examiner.test.ts && node --experimental-strip-types tests/student.test.ts && node --experimental-strip-types tests/admin.test.ts && node --experimental-strip-types tests/registration.test.ts && node --experimental-strip-types tests/import_questions.test.ts && node --experimental-strip-types tests/ui_ux_issues.test.ts && node --experimental-strip-types tests/exam_instructions.test.ts && node --experimental-strip-types tests/i18n_header.test.ts"
   },
   "dependencies": {
     "@mediapipe/camera_utils": "^0.3.1675466862",

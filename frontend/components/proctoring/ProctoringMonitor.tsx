@@ -13,6 +13,7 @@ interface ProctoringMonitorProps {
   gazeSensitivity?: "low" | "medium" | "high";
   maxTabSwitchWarnings?: number;
   isSessionActive?: boolean;
+  embedded?: boolean;
 }
 
 export const ProctoringMonitor: React.FC<ProctoringMonitorProps> = ({
@@ -22,6 +23,7 @@ export const ProctoringMonitor: React.FC<ProctoringMonitorProps> = ({
   gazeSensitivity = "medium",
   maxTabSwitchWarnings = 3,
   isSessionActive = true,
+  embedded = false,
 }) => {
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
 
@@ -43,6 +45,28 @@ export const ProctoringMonitor: React.FC<ProctoringMonitorProps> = ({
   });
 
   if (!proctoringEnabled) return null;
+
+  if (embedded) {
+    return (
+      <div className="relative w-full h-full flex flex-col justify-center items-center">
+        {/* Dynamic Alert Banner when warning triggers */}
+        {lastWarning && isSessionActive && (
+          <div className="absolute top-2 left-2 right-2 z-20 flex items-center gap-2 bg-amber-950/95 text-amber-200 border border-amber-700/80 px-2.5 py-1 rounded-lg text-[11px] shadow-lg animate-bounce">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="truncate">{lastWarning}</span>
+          </div>
+        )}
+
+        <WebcamPreview
+          videoRef={videoRef}
+          cameraStatus={cameraStatus}
+          faceCount={faceCount}
+          isLookingAway={isLookingAway}
+          className="w-full h-full aspect-video"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
