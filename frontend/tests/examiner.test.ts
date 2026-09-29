@@ -149,8 +149,8 @@ async function runExaminerTests() {
   const reordered = moveQuestion(selected, 0, 1); // Move Q1 down
   assert(reordered[0].id === 2 && reordered[1].id === 1, "Question sequence correctly reordered");
 
-  // 11. Exam Details Mapping
-  console.log("\n11. Exam Details Mapping:");
+  // 11. Exam Details Mapping & Creation Payload
+  console.log("\n11. Exam Details Mapping & Creation Payload:");
   const mockExam = {
     id: 501,
     title: "Final Exam",
@@ -160,6 +160,21 @@ async function runExaminerTests() {
     questions: mockQuestions,
   };
   assert(mockExam.duration === 90 && mockExam.questions.length === 1, "Exam details mapped with questions");
+
+  // Validate create exam payload constructor
+  function buildCreateExamPayload(title: string, subject: string, duration: number, selectedQuestions: any[]) {
+    return {
+      title: title.trim(),
+      subject: subject.trim(),
+      duration: Number(duration),
+      question_count: selectedQuestions.length,
+      total_marks: selectedQuestions.reduce((acc, q) => acc + q.marks, 0),
+      question_ids: selectedQuestions.map((q) => q.id),
+    };
+  }
+  const createPayload = buildCreateExamPayload("DBMS Midterm", "DBMS", 60, mockQuestions);
+  assert(createPayload.question_count === 1 && createPayload.question_count > 0, "Exam creation payload includes required question_count integer");
+
 
   // 12. Results Page Read-Only State
   console.log("\n12. Results Page Immutability Guard:");

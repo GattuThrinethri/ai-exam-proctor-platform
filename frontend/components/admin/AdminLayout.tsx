@@ -44,9 +44,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0b132b] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-sm font-medium text-slate-300">
             {t("admin.verifyingCredentials")}
           </p>
@@ -58,9 +58,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Role Protection: Non-admins cannot access admin portal
   if (user && user.role !== "admin") {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-slate-800 p-8 rounded-2xl border border-red-800 shadow-xl text-center text-white">
-          <div className="w-12 h-12 bg-red-900/50 text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-700">
+      <div className="min-h-screen bg-[#0b132b] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#131d33] p-8 rounded-2xl border border-rose-800/60 shadow-xl text-center text-white">
+          <div className="w-12 h-12 bg-rose-950/60 text-rose-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-700/50">
             <ShieldAlert className="w-6 h-6" />
           </div>
           <h2 className="text-xl font-bold mb-2">{t("common.accessDenied")}</h2>
@@ -70,13 +70,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex justify-center gap-3">
             <button
               onClick={() => router.push(user.role === "examiner" ? "/examiner" : "/student")}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-sm font-medium transition-colors"
             >
               {user.role === "examiner" ? t("common.examinerPortal") : t("common.studentPortal")}
             </button>
             <button
               onClick={() => authService.logout()}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-medium transition-colors"
             >
               {t("common.signOut")}
             </button>
@@ -87,7 +87,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f6fb] flex flex-col">
+    <div className="min-h-screen bg-[#0b132b] text-slate-100 flex flex-col">
       {/* Unified Top Header */}
       <AppHeader role="admin" navItems={navItems} user={user} />
 
@@ -97,9 +97,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+      <footer className="bg-[#0f172a] border-t border-[#1e2d4a] py-4 text-center text-xs text-slate-400">
         {t("common.adminPortal")} &bull; {t("common.platformTitle")}
       </footer>
     </div>
   );
 }
+

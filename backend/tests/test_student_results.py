@@ -155,21 +155,18 @@ async def test_03_full_exam_submission_results_and_privacy_flow(client, examiner
     )
     assert sub_res.status_code == 200
 
-    # 4. Student 1 views result details (before publishing)
+    # 4. Student 1 views result details (before publishing - evaluation pending)
     res_detail = await client.get(
         f"/api/results/session/{s1_session_id}",
         headers={"Authorization": f"Bearer {student1_token}"}
     )
     assert res_detail.status_code == 200
     r_data = res_detail.json()
-    assert r_data["total_score"] == 5.0
-    assert r_data["percentile"] == 100.0  # Single candidate initially returns 100.0%
     assert r_data["published"] is False
-
-    # Solution review security: When published is False, student cannot see correct options
-    for q_rev in r_data["question_reviews"]:
-        assert q_rev["correct_option_ids"] is None
-        assert q_rev["model_answer"] is None
+    assert r_data["total_score"] is None
+    assert r_data["percentage"] is None
+    assert r_data["status"] == "evaluation_pending"
+    assert r_data["question_reviews"] == []
 
     # 5. Student 2 cannot access Student 1's results (returns 403)
     p_viol = await client.get(

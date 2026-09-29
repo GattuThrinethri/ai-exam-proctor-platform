@@ -28,6 +28,9 @@ import { studentApi, StudentExamPaper, StudentPaperQuestion, Exam } from "@/serv
 import { authService } from "@/services/auth";
 import { ProctoringMonitor } from "@/components/proctoring/ProctoringMonitor";
 import ExamInstructionsModal from "@/components/student/ExamInstructionsModal";
+import LanguageSelector from "@/components/layout/LanguageSelector";
+import VirtualKeyboard from "@/components/student/VirtualKeyboard";
+import { useLanguage } from "@/i18n";
 
 interface LocalAnswerState {
   selected_option_ids: number[];
@@ -41,6 +44,7 @@ export default function ExamTakePage() {
   const params = useParams();
   const sessionId = Number(params.id);
   const router = useRouter();
+  const { t, language } = useLanguage();
 
   // Core Exam State
   const [paper, setPaper] = useState<StudentExamPaper | null>(null);
@@ -117,6 +121,9 @@ export default function ExamTakePage() {
     }
   }
 
+  // Submission Status State
+  const [submittedSuccess, setSubmittedSuccess] = useState(false);
+
   // Verify instruction confirmation on session change
   useEffect(() => {
     if (typeof window !== "undefined" && sessionId) {
@@ -142,8 +149,9 @@ export default function ExamTakePage() {
       ]);
 
       if (sessionData.is_timed_out || sessionData.status === "submitted" || sessionData.status === "timed_out") {
-        alert("This exam session has already ended or timed out.");
-        router.replace(`/student/results/${sessionId}`);
+        setPaper(paperData);
+        setSubmittedSuccess(true);
+        setLoading(false);
         return;
       }
 
@@ -279,7 +287,6 @@ export default function ExamTakePage() {
     const file = e.target.files?.[0];
     if (!file || !paper) return;
 
-    // Validate type & size (10MB limit)
     if (!["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(file.type)) {
       alert("Invalid file format. Please upload a JPG or PNG image.");
       return;
@@ -341,7 +348,8 @@ export default function ExamTakePage() {
     setSubmitting(true);
     try {
       await studentApi.submitExam(sessionId);
-      router.replace(`/student/results/${sessionId}`);
+      setSubmittedSuccess(true);
+      setShowSubmitModal(false);
     } catch (err: any) {
       alert(`Submission error: ${err.message}`);
       setSubmitting(false);
@@ -357,7 +365,8 @@ export default function ExamTakePage() {
     } catch (err) {
       console.log("Auto-submit finalized");
     } finally {
-      router.replace(`/student/results/${sessionId}`);
+      setSubmittedSuccess(true);
+      setShowSubmitModal(false);
     }
   }
 
@@ -372,28 +381,89 @@ export default function ExamTakePage() {
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   }
 
+  // Render Professional Submission Confirmation Screen
+  if (submittedSuccess) {
+    return (
+      <div className="min-h-screen bg-[#0b132b] flex items-center justify-center p-4 text-slate-100 font-sans">
+        <div className="max-w-xl w-full bg-[#131d33] rounded-3xl border border-[#1e2d4a] p-8 sm:p-10 shadow-2xl space-y-6 text-center">
+          {/* Success Icon */}
+          <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto shadow-lg">
+            <CheckCircle className="w-8 h-8 text-emerald-400" />
+          </div>
+
+          {/* Submission Heading & Subtitle */}
+          <div className="space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              {t("evaluation.submissionSuccessTitle")}
+            </h1>
+            <p className="text-sm text-slate-300 leading-relaxed max-w-md mx-auto">
+              {t("evaluation.submissionSuccessDesc")}
+            </p>
+          </div>
+
+          {/* Status Badges */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="p-4 rounded-2xl bg-emerald-950/50 border border-emerald-500/30 flex items-center justify-center gap-2 text-emerald-300 font-bold text-xs sm:text-sm">
+              <CheckCircle className="w-4 h-4 text-emerald-400" />
+              <span>{t("evaluation.submissionStatusSuccess")}</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-amber-950/50 border border-amber-500/30 flex items-center justify-center gap-2 text-amber-300 font-bold text-xs sm:text-sm">
+              <Clock className="w-4 h-4 text-amber-400" />
+              <span>{t("evaluation.submissionStatusPending")}</span>
+            </div>
+          </div>
+
+          {/* Exam Info */}
+          {paper && (
+            <div className="p-4 rounded-2xl bg-[#0b132b] border border-[#1e2d4a] text-xs text-slate-400 space-y-1 text-left">
+              <p><span className="font-semibold text-slate-300">{t("examiner.examTitle")}:</span> {paper.title}</p>
+              <p><span className="font-semibold text-slate-300">{t("examiner.subject")}:</span> {paper.subject}</p>
+              <p><span className="font-semibold text-slate-300">{t("student.questions")}:</span> {paper.questions?.length || 0}</p>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+            <button
+              onClick={() => router.replace("/student")}
+              className="w-full sm:flex-1 py-3 bg-teal-500 hover:bg-teal-400 text-slate-950 rounded-xl text-sm font-bold transition-colors shadow-md shadow-teal-500/10 flex items-center justify-center gap-2"
+            >
+              <span>{t("evaluation.returnToDashboard")}</span>
+            </button>
+            <button
+              onClick={() => router.replace("/student/results")}
+              className="w-full sm:flex-1 py-3 bg-[#0b132b] hover:bg-[#1a2744] text-slate-200 border border-[#1e2d4a] rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              <span>{t("evaluation.viewSubmittedExams")}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white">
-        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-sm font-medium text-slate-300">Entering Examination Room...</p>
-        <p className="text-xs text-slate-500 mt-1">Initializing sanitized question paper & server timer</p>
+      <div className="min-h-screen bg-[#0b132b] flex flex-col items-center justify-center text-white">
+        <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-sm font-semibold text-slate-200">{t("instructions.enteringRoom")}</p>
+        <p className="text-xs text-slate-400 mt-1">{t("common.loading")}</p>
       </div>
     );
   }
 
   if (error || !paper) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-lg space-y-4">
-          <AlertTriangle className="w-10 h-10 text-red-600 mx-auto" />
-          <h2 className="text-xl font-bold text-slate-900">Exam Access Error</h2>
-          <p className="text-sm text-slate-600">{error || "Unable to start exam session"}</p>
+      <div className="min-h-screen bg-[#0b132b] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#131d33] rounded-2xl border border-rose-800/60 p-8 text-center shadow-2xl space-y-4">
+          <AlertTriangle className="w-10 h-10 text-rose-500 mx-auto" />
+          <h2 className="text-xl font-bold text-white">Exam Access Error</h2>
+          <p className="text-sm text-slate-300">{error || "Unable to start exam session"}</p>
           <button
             onClick={() => router.replace("/student/exams")}
-            className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700"
+            className="w-full py-2.5 bg-teal-600 text-slate-950 rounded-xl text-sm font-bold hover:bg-teal-500 transition-colors"
           >
-            Return to Available Exams
+            {t("student.availableExams")}
           </button>
         </div>
       </div>
@@ -420,7 +490,7 @@ export default function ExamTakePage() {
     };
 
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#0b132b] flex items-center justify-center p-4">
         <ExamInstructionsModal
           isOpen={true}
           onClose={() => router.replace("/student/exams")}
@@ -450,70 +520,63 @@ export default function ExamTakePage() {
     currentAns.answer_text.trim().length > 0 ||
     Boolean(currentAns.image_url);
 
-  // Counts for summary
   const totalQuestions = paper.questions.length;
   const answeredCount = Object.values(answers).filter(
     (a) => a.selected_option_ids.length > 0 || a.answer_text.trim().length > 0 || a.image_url
   ).length;
+
   const reviewCount = Object.values(answers).filter((a) => a.is_marked_for_review).length;
 
-  const isLowTime = remainingSeconds < 600; // < 10 mins
-  const isCriticalTime = remainingSeconds < 300; // < 5 mins
-
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col select-none">
-      {/* Top Authoritative Exam Header */}
-      <header className="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-40 px-4 sm:px-6 py-3 shadow-md flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex w-9 h-9 rounded-xl bg-indigo-600 items-center justify-center font-bold text-white shadow-inner">
-            E
+    <div className="min-h-screen bg-[#0b132b] text-slate-100 flex flex-col font-sans select-none">
+      {/* Top Examination Control Header */}
+      <header className="bg-[#0b132b]/95 border-b border-[#1e2d4a] sticky top-0 z-40 px-3 sm:px-6 py-3 flex items-center justify-between shadow-lg shadow-black/20">
+        {/* Left: Metadata & Student Language Selector */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-teal-950/70 text-teal-300 border border-teal-500/40 uppercase">
+              {paper.subject}
+            </span>
+            <h1 className="text-sm sm:text-base font-bold text-white max-w-[150px] sm:max-w-xs md:max-w-md truncate">
+              {paper.title}
+            </h1>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm sm:text-base font-bold tracking-tight text-white truncate max-w-[110px] sm:max-w-xs" title={paper.title}>
-                {paper.title}
-              </h1>
-              <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">
-                {paper.subject}
-              </span>
-            </div>
-            <p className="text-[11px] sm:text-xs text-slate-400">
-              Q{currentIdx + 1}/{totalQuestions} &bull; {paper.duration_minutes}m
-            </p>
+
+          {/* Student Exam Language Selector */}
+          <div className="pl-2 border-l border-[#1e2d4a]">
+            <LanguageSelector />
           </div>
         </div>
 
-        {/* Center: Server-Authoritative Countdown Clock */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        {/* Center: Authoritative Clock & Autosave */}
+        <div className="flex items-center gap-3 sm:gap-6">
           <div
-            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl border font-mono text-xs sm:text-sm font-bold tracking-wider ${
-              isCriticalTime
-                ? "bg-red-500/20 text-red-300 border-red-500 animate-pulse"
-                : isLowTime
-                ? "bg-amber-500/20 text-amber-300 border-amber-500"
-                : "bg-slate-800 text-emerald-300 border-slate-700"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs sm:text-sm font-mono font-bold transition-all ${
+              remainingSeconds < 300
+                ? "bg-rose-950/80 border-rose-600 text-rose-300 animate-pulse"
+                : "bg-[#131d33] border-[#1e2d4a] text-teal-300 shadow-sm"
             }`}
           >
-            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
-            <span>{formatTimer(remainingSeconds)}</span>
+            <Clock className="w-4 h-4 text-teal-400 shrink-0" />
+            <span>{t("student.timeRemaining")}: {formatTimer(remainingSeconds)}</span>
           </div>
 
           {/* Autosave Pill */}
           <div className="hidden md:flex items-center gap-1.5 text-xs text-slate-400">
             {saveStatus === "saving" ? (
               <>
-                <div className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
-                <span>Saving...</span>
+                <div className="w-3 h-3 border-2 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
+                <span>{t("student.submitting")}</span>
               </>
             ) : saveStatus === "saved" ? (
               <>
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span>All changes saved</span>
+                <Check className="w-3.5 h-3.5 text-teal-400" />
+                <span className="text-teal-400/90">{t("student.allChangesSaved")}</span>
               </>
             ) : (
               <>
-                <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
-                <span className="text-red-400">Error saving</span>
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                <span className="text-rose-400">{t("student.errorSaving")}</span>
               </>
             )}
           </div>
@@ -524,21 +587,21 @@ export default function ExamTakePage() {
           {paper.proctoring_enabled && (
             <button
               onClick={() => setShowProctorCam(!showProctorCam)}
-              className={`p-1.5 sm:p-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                showProctorCam ? "bg-slate-800 text-indigo-400" : "bg-slate-800/60 text-slate-400 hover:text-white"
+              className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border ${
+                showProctorCam ? "bg-teal-950/60 border-teal-500/40 text-teal-300" : "bg-[#131d33] border-[#1e2d4a] text-slate-400 hover:text-white"
               }`}
               title="Toggle Proctor Camera View"
             >
               {showProctorCam ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              <span className="hidden lg:inline">{showProctorCam ? "Cam Active" : "Cam Hidden"}</span>
+              <span className="hidden lg:inline">{showProctorCam ? t("student.aiActive") : t("student.disabled")}</span>
             </button>
           )}
 
           {/* Fullscreen Mode Toggle Button */}
           <button
             onClick={toggleFullscreen}
-            className={`p-1.5 sm:p-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-              isFullscreen ? "bg-slate-800 text-emerald-400 border border-emerald-500/40" : "bg-slate-800/60 text-slate-400 hover:text-white"
+            className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border ${
+              isFullscreen ? "bg-teal-950/60 border-teal-500/40 text-teal-300" : "bg-[#131d33] border-[#1e2d4a] text-slate-400 hover:text-white"
             }`}
             title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
           >
@@ -548,17 +611,17 @@ export default function ExamTakePage() {
 
           <button
             onClick={() => setShowSubmitModal(true)}
-            className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-emerald-600 text-white font-semibold text-xs sm:text-sm hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-1 whitespace-nowrap"
+            className="px-3.5 sm:px-4 py-2 rounded-xl bg-teal-500 text-slate-950 font-bold text-xs sm:text-sm hover:bg-teal-400 transition-colors shadow-md shadow-teal-500/10 flex items-center gap-1.5 whitespace-nowrap"
           >
-            <FileCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Finish &amp; </span>Submit
+            <FileCheck className="w-4 h-4" />
+            <span>{t("student.finishAndSubmit")}</span>
           </button>
         </div>
       </header>
 
       {/* Proctoring Non-Intrusive Warning Banner */}
       {proctorWarning && (
-        <div className="bg-amber-500 text-slate-950 px-4 py-2 text-xs font-semibold flex items-center justify-between shadow-sm sticky top-14 z-30">
+        <div className="bg-amber-500 text-slate-950 px-4 py-2 text-xs font-semibold flex items-center justify-between shadow-md sticky top-14 z-30">
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-slate-950 shrink-0" />
             <span>{proctorWarning}</span>
@@ -569,60 +632,62 @@ export default function ExamTakePage() {
         </div>
       )}
 
-      {/* Main Examination Workspace - Full Window Viewport */}
+      {/* Main Examination Workspace */}
       <div className="flex-1 w-full px-3 sm:px-5 lg:px-8 py-4 lg:py-6 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
-        {/* Left Column: Active Question Workspace (Spans 8 cols on laptop, 9 on desktop) */}
+        {/* Left Column: Active Question Workspace */}
         <div className="lg:col-span-8 xl:col-span-9 space-y-5 flex flex-col justify-between">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="bg-[#131d33] rounded-2xl border border-[#1e2d4a] p-5 sm:p-8 shadow-xl space-y-6">
             {/* Question Header Meta */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#1e2d4a] pb-4">
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                  Question {currentIdx + 1}
+                <span className="px-3 py-1 rounded-xl text-xs font-bold bg-teal-500/20 text-teal-300 border border-teal-500/40">
+                  {t("student.question")} {currentIdx + 1}
                 </span>
-                <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 uppercase">
+                <span className="px-2.5 py-1 rounded-xl text-xs font-semibold bg-[#162238] text-slate-300 border border-[#1e2d4a] uppercase">
                   {(currentQ.question_type || "").replace(/_/g, " ")}
                 </span>
-                <span className="text-xs text-slate-400 capitalize">Difficulty: {currentQ.difficulty}</span>
+                <span className="text-xs text-slate-400 capitalize">
+                  {t("student.difficulty")}: {currentQ.difficulty}
+                </span>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-800">
-                  {currentQ.marks} Marks
+                <span className="px-3 py-1 rounded-xl text-xs font-bold bg-[#162238] text-slate-200 border border-[#1e2d4a]">
+                  {currentQ.marks} {t("student.marks")}
                 </span>
                 <button
                   onClick={toggleMarkForReview}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                  className={`px-3 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border ${
                     currentAns.is_marked_for_review
-                      ? "bg-purple-100 text-purple-700 border border-purple-300"
-                      : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200"
+                      ? "bg-purple-950/80 text-purple-300 border-purple-500/60"
+                      : "bg-[#162238] text-slate-300 hover:text-white border-[#1e2d4a]"
                   }`}
                 >
                   <Bookmark className="w-3.5 h-3.5" />
-                  {currentAns.is_marked_for_review ? "Marked for Review" : "Mark for Review"}
+                  {currentAns.is_marked_for_review ? t("student.markedForReview") : t("student.markForReview")}
                 </button>
               </div>
             </div>
 
-            {/* Question Prompt */}
+            {/* Question Prompt (Exam question text remains UNCHANGED as authored by examiner) */}
             <div className="space-y-4">
-              <p className="text-base sm:text-lg font-medium text-slate-900 leading-relaxed">
+              <p className="text-base sm:text-lg font-medium text-slate-100 leading-relaxed">
                 {currentQ.question_text}
               </p>
 
               {currentQ.image_url && (
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 inline-block">
+                <div className="p-3 bg-[#162238] rounded-xl border border-[#1e2d4a] inline-block">
                   <img
                     src={currentQ.image_url}
                     alt="Question visual reference"
-                    className="max-h-72 rounded-lg object-contain bg-white"
+                    className="max-h-72 rounded-lg object-contain bg-slate-900"
                   />
                 </div>
               )}
             </div>
 
             {/* Answer Input Components */}
-            <div className="pt-4 border-t border-slate-100 space-y-4">
+            <div className="pt-4 border-t border-[#1e2d4a] space-y-4">
               {(() => {
                 const normType = (currentQ.question_type || "").toString().toLowerCase().trim().replace(/[\s-]+/g, "_");
                 const isMCQ = normType === "mcq";
@@ -633,7 +698,7 @@ export default function ExamTakePage() {
 
                 return (
                   <>
-                    {/* Type 1: MCQ (Single Select Radio Cards) */}
+                    {/* MCQ (Radio buttons - Options remain UNCHANGED as authored) */}
                     {isMCQ && (
                       <div className="space-y-2.5">
                         {currentQ.options.map((opt) => {
@@ -643,21 +708,21 @@ export default function ExamTakePage() {
                               key={opt.id}
                               type="button"
                               onClick={() => updateCurrentAnswer({ selected_option_ids: [opt.id] })}
-                              className={`w-full p-4 rounded-xl border text-left text-sm flex items-center justify-between transition-all ${
+                              className={`w-full p-4 rounded-2xl border text-left text-sm flex items-center justify-between transition-all ${
                                 isSelected
-                                  ? "bg-indigo-50/80 border-indigo-600 ring-2 ring-indigo-600 text-indigo-950 font-semibold"
-                                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                                  ? "bg-teal-500/20 border-teal-500 text-teal-100 font-semibold shadow-md shadow-teal-500/10"
+                                  : "bg-[#162238] border-[#1e2d4a] text-slate-200 hover:bg-[#1a2744] hover:border-slate-500"
                               }`}
                             >
                               <span className="flex items-center gap-3">
                                 <span
                                   className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                                    isSelected ? "border-indigo-600 bg-indigo-600 text-white" : "border-slate-300"
+                                    isSelected ? "border-teal-400 bg-teal-500 text-slate-950 font-bold" : "border-slate-500"
                                   }`}
                                 >
-                                  {isSelected && <span className="w-2 h-2 rounded-full bg-white"></span>}
+                                  {isSelected && <span className="w-2 h-2 rounded-full bg-slate-950"></span>}
                                 </span>
-                                {opt.option_text}
+                                <span>{opt.option_text}</span>
                               </span>
                             </button>
                           );
@@ -665,10 +730,10 @@ export default function ExamTakePage() {
                       </div>
                     )}
 
-                    {/* Type 2: MULTI_SELECT (Checkboxes) */}
+                    {/* MULTI_SELECT (Checkboxes) */}
                     {isMultiSelect && (
                       <div className="space-y-2.5">
-                        <p className="text-xs text-indigo-600 font-medium mb-1">
+                        <p className="text-xs text-teal-400 font-medium mb-1">
                           Select all options that apply:
                         </p>
                         {currentQ.options.map((opt) => {
@@ -684,21 +749,21 @@ export default function ExamTakePage() {
                                   : [...currentIds, opt.id];
                                 updateCurrentAnswer({ selected_option_ids: nextIds });
                               }}
-                              className={`w-full p-4 rounded-xl border text-left text-sm flex items-center justify-between transition-all ${
+                              className={`w-full p-4 rounded-2xl border text-left text-sm flex items-center justify-between transition-all ${
                                 isSelected
-                                  ? "bg-indigo-50/80 border-indigo-600 ring-2 ring-indigo-600 text-indigo-950 font-semibold"
-                                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                                  ? "bg-teal-500/20 border-teal-500 text-teal-100 font-semibold shadow-md shadow-teal-500/10"
+                                  : "bg-[#162238] border-[#1e2d4a] text-slate-200 hover:bg-[#1a2744] hover:border-slate-500"
                               }`}
                             >
                               <span className="flex items-center gap-3">
                                 <span
                                   className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
-                                    isSelected ? "border-indigo-600 bg-indigo-600 text-white" : "border-slate-300"
+                                    isSelected ? "border-teal-400 bg-teal-500 text-slate-950 font-bold" : "border-slate-500"
                                   }`}
                                 >
-                                  {isSelected && <Check className="w-3.5 h-3.5" />}
+                                  {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                                 </span>
-                                {opt.option_text}
+                                <span>{opt.option_text}</span>
                               </span>
                             </button>
                           );
@@ -706,12 +771,12 @@ export default function ExamTakePage() {
                       </div>
                     )}
 
-                    {/* Type 3: SHORT_ANSWER (Comfortable Multi-Line Textarea) */}
+                    {/* SHORT_ANSWER (Textarea + Virtual Keyboard) */}
                     {isShortAnswer && (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <label htmlFor="student-short-answer-input" className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
-                            Student Answer (Short Answer)
+                          <label htmlFor="student-short-answer-input" className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+                            {t("examiner.studentAnswer")} (Short Answer)
                           </label>
                           <span className="text-xs text-slate-400">
                             {currentAns.answer_text.length} characters
@@ -722,55 +787,66 @@ export default function ExamTakePage() {
                           rows={5}
                           value={currentAns.answer_text}
                           onChange={(e) => updateCurrentAnswer({ answer_text: e.target.value })}
-                          placeholder="Type your concise response here (e.g. definitions, brief explanations, direct answers)..."
-                          className="w-full min-h-[140px] p-3.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-indigo-500 text-slate-900 leading-relaxed resize-y shadow-inner"
+                          placeholder={t("student.shortAnswerPlaceholder")}
+                          className="w-full min-h-[140px] p-4 text-sm bg-[#0f172a] border border-[#1e2d4a] rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-500 text-white leading-relaxed resize-y shadow-inner"
                         />
-                        <div className="flex justify-between items-center text-xs text-slate-400">
-                          <span>Supports multiple lines &bull; Press Enter for new lines</span>
-                          <span className="text-emerald-600 font-medium">Autosave enabled</span>
-                        </div>
+                        {/* Indic Virtual Keyboard Helper */}
+                        {language !== "en" && (
+                          <VirtualKeyboard
+                            language={language}
+                            onInsertChar={(char) =>
+                              updateCurrentAnswer({ answer_text: currentAns.answer_text + char })
+                            }
+                            onDeleteChar={() =>
+                              updateCurrentAnswer({ answer_text: currentAns.answer_text.slice(0, -1) })
+                            }
+                          />
+                        )}
                       </div>
                     )}
 
-                    {/* Type 4: LONG_ANSWER (Rich Multi-Line Essay Editor) */}
+                    {/* LONG_ANSWER (Essay Textarea + Virtual Keyboard) */}
                     {isLongAnswer && (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <label htmlFor="student-long-answer-input" className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
-                            Student Answer (Long Answer)
+                          <label htmlFor="student-long-answer-input" className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+                            {t("examiner.studentAnswer")} (Long Answer)
                           </label>
                           <div className="flex items-center gap-3 text-xs text-slate-400">
                             <span>{currentAns.answer_text.length} characters</span>
-                            <span>&bull;</span>
-                            <span>
-                              Words: {currentAns.answer_text.trim() ? currentAns.answer_text.trim().split(/\s+/).length : 0}
-                            </span>
                           </div>
                         </div>
                         <textarea
                           id="student-long-answer-input"
-                          rows={12}
+                          rows={10}
                           value={currentAns.answer_text}
                           onChange={(e) => updateCurrentAnswer({ answer_text: e.target.value })}
-                          placeholder="Provide your comprehensive explanation, proofs, step-by-step reasoning, and structured analysis..."
-                          className="w-full min-h-[300px] p-4 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-indigo-500 text-slate-900 leading-relaxed resize-y font-normal shadow-inner"
+                          placeholder={t("student.longAnswerPlaceholder")}
+                          className="w-full min-h-[250px] p-4 text-sm bg-[#0f172a] border border-[#1e2d4a] rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-500 text-white leading-relaxed resize-y font-normal shadow-inner"
                         ></textarea>
-                        <div className="flex justify-between items-center text-xs text-slate-400">
-                          <span>Organize your response with clear paragraphs, headings, or bullet points</span>
-                          <span className="text-emerald-600 font-medium">Autosave enabled</span>
-                        </div>
+                        {/* Indic Virtual Keyboard Helper */}
+                        {language !== "en" && (
+                          <VirtualKeyboard
+                            language={language}
+                            onInsertChar={(char) =>
+                              updateCurrentAnswer({ answer_text: currentAns.answer_text + char })
+                            }
+                            onDeleteChar={() =>
+                              updateCurrentAnswer({ answer_text: currentAns.answer_text.slice(0, -1) })
+                            }
+                          />
+                        )}
                       </div>
                     )}
 
-                    {/* Type 5: IMAGE_UPLOAD (Handwritten Answer Sheet + OCR) */}
+                    {/* IMAGE_UPLOAD */}
                     {isImageUpload && (
                       <div className="space-y-4">
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                          Handwritten Answer Sheet Upload
+                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                          {t("student.handwrittenUpload")}
                         </label>
 
-                        {/* Dropzone & Selector */}
-                        <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:bg-slate-50 transition-colors">
+                        <div className="border-2 border-dashed border-[#1e2d4a] rounded-2xl p-6 text-center hover:bg-[#162238] transition-colors">
                           <input
                             type="file"
                             ref={fileInputRef}
@@ -780,36 +856,35 @@ export default function ExamTakePage() {
                             id="handwritten-upload"
                           />
                           <ImageIcon className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                          <p className="text-sm font-semibold text-slate-700">Upload handwritten answer sheet</p>
+                          <p className="text-sm font-semibold text-slate-200">{t("student.handwrittenUpload")}</p>
                           <p className="text-xs text-slate-400 mt-1">JPEG, JPG, or PNG (Max 10MB)</p>
                           <label
                             htmlFor="handwritten-upload"
-                            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold cursor-pointer shadow-sm transition-colors"
+                            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-400 text-slate-950 rounded-xl text-xs font-bold cursor-pointer shadow-md transition-colors"
                           >
-                            Select Image File
+                            {t("student.selectImageFile")}
                           </label>
                         </div>
 
-                        {/* Upload Status / Preview */}
                         {uploadingImage && (
-                          <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center justify-center gap-2 text-indigo-700 text-xs font-medium">
-                            <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                            Uploading image and performing OCR transcription...
+                          <div className="p-4 bg-teal-950/40 rounded-xl border border-teal-500/30 flex items-center justify-center gap-2 text-teal-300 text-xs font-medium">
+                            <div className="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
+                            {t("student.uploadingImage")}
                           </div>
                         )}
 
                         {currentAns.image_url && (
-                          <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                            <p className="text-xs font-semibold text-slate-700">Uploaded Sheet:</p>
+                          <div className="space-y-3 p-4 bg-[#162238] rounded-xl border border-[#1e2d4a]">
+                            <p className="text-xs font-semibold text-slate-300">Uploaded Sheet:</p>
                             <img
                               src={currentAns.image_url}
                               alt="Uploaded answer sheet"
-                              className="max-h-64 rounded-lg border border-slate-300 object-contain mx-auto bg-white"
+                              className="max-h-64 rounded-lg border border-[#1e2d4a] object-contain mx-auto bg-slate-950"
                             />
                             {currentAns.ocr_text && (
-                              <div className="p-3 bg-white rounded-lg border border-slate-200 text-xs text-slate-600">
-                                <span className="font-semibold block mb-1">OCR Transcribed Text:</span>
-                                <p className="italic font-mono">{currentAns.ocr_text}</p>
+                              <div className="p-3 bg-[#0f172a] rounded-lg border border-[#1e2d4a] text-xs text-slate-300">
+                                <span className="font-semibold block mb-1">{t("student.ocrText")}:</span>
+                                <p className="italic font-mono text-[11px]">{currentAns.ocr_text}</p>
                               </div>
                             )}
                           </div>
@@ -823,88 +898,83 @@ export default function ExamTakePage() {
           </div>
 
           {/* Action Navigation Footer */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleClearAnswer}
-                disabled={!isCurrentAnswered}
-                className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 disabled:opacity-30 transition-colors flex items-center gap-1"
-              >
-                <RotateCcw className="w-3.5 h-3.5" /> Clear Answer
-              </button>
-            </div>
+          <div className="bg-[#131d33] rounded-2xl border border-[#1e2d4a] p-4 shadow-lg flex items-center justify-between gap-4">
+            <button
+              type="button"
+              onClick={handleClearAnswer}
+              disabled={!isCurrentAnswered}
+              className="px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-xl hover:bg-[#162238] disabled:opacity-30 transition-colors flex items-center gap-1 border border-transparent hover:border-[#1e2d4a]"
+            >
+              <RotateCcw className="w-3.5 h-3.5" /> {t("student.clearAnswer")}
+            </button>
 
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setCurrentIdx((prev) => Math.max(0, prev - 1))}
                 disabled={currentIdx === 0}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs sm:text-sm hover:bg-slate-50 disabled:opacity-40 transition-colors flex items-center gap-1.5"
+                className="px-4 py-2.5 rounded-xl border border-[#1e2d4a] bg-[#162238] text-slate-200 font-semibold text-xs sm:text-sm hover:bg-[#1a2744] hover:text-white disabled:opacity-40 transition-colors flex items-center gap-1.5"
               >
-                <ChevronLeft className="w-4 h-4" /> Previous
+                <ChevronLeft className="w-4 h-4" /> {t("student.previousQuestion")}
               </button>
 
               {currentIdx < totalQuestions - 1 ? (
                 <button
                   type="button"
                   onClick={() => setCurrentIdx((prev) => Math.min(totalQuestions - 1, prev + 1))}
-                  className="px-5 py-2 rounded-xl bg-indigo-600 text-white font-semibold text-xs sm:text-sm hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-xl bg-teal-500 text-slate-950 font-bold text-xs sm:text-sm hover:bg-teal-400 transition-colors shadow-md flex items-center gap-1.5"
                 >
-                  Next <ChevronRight className="w-4 h-4" />
+                  {t("student.nextQuestion")} <ChevronRight className="w-4 h-4" />
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={() => setShowSubmitModal(true)}
-                  className="px-5 py-2 rounded-xl bg-emerald-600 text-white font-semibold text-xs sm:text-sm hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs sm:text-sm hover:bg-emerald-400 transition-colors shadow-md flex items-center gap-1.5"
                 >
-                  <FileCheck className="w-4 h-4" /> Review & Submit
+                  <FileCheck className="w-4 h-4" /> {t("student.reviewAndSubmit")}
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Column: Question Palette & Proctor Monitor (Sticky Sidebar) */}
-        <div className="lg:col-span-4 xl:col-span-3 space-y-4 sticky top-16">
-          {/* 1. Live Proctoring Webcam (Permanently positioned above question numbers) */}
+        {/* Right Column: Question Palette & Proctor Monitor */}
+        <div className="lg:col-span-4 xl:col-span-3 space-y-4 sticky top-20">
+          {/* Live Proctoring Webcam */}
           {paper.proctoring_enabled && showProctorCam && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-3.5 sm:p-4 shadow-sm space-y-2.5">
+            <div className="bg-[#131d33] rounded-2xl border border-[#1e2d4a] p-3.5 sm:p-4 shadow-xl space-y-2.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-800 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-indigo-600" /> Live Proctoring Active
+                <span className="font-semibold text-slate-200 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-teal-400" /> {t("student.proctoring")}
                 </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
               </div>
-              <div className="rounded-xl overflow-hidden border border-slate-200 aspect-video bg-black w-full flex items-center justify-center">
+              <div className="rounded-xl overflow-hidden border border-[#1e2d4a] aspect-video bg-black w-full flex items-center justify-center">
                 <ProctoringMonitor sessionId={sessionId} token={authService.getToken() || ""} embedded={true} />
               </div>
-              <p className="text-[11px] text-slate-400 text-center leading-tight">
-                Facial orientation analysis active &bull; Keep face centered in frame
-              </p>
             </div>
           )}
 
-          {/* 2. Question Navigator Palette (Directly below webcam) */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4">
+          {/* Question Navigator Palette */}
+          <div className="bg-[#131d33] rounded-2xl border border-[#1e2d4a] p-4 sm:p-5 shadow-xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900">Question Palette</h3>
-              <span className="text-xs font-semibold text-indigo-600">
-                {answeredCount} / {totalQuestions} Answered
+              <h3 className="text-sm font-bold text-white">{t("student.questionPalette")}</h3>
+              <span className="text-xs font-semibold text-teal-400">
+                {answeredCount} / {totalQuestions}
               </span>
             </div>
 
             {/* Summary Indicators */}
-            <div className="grid grid-cols-3 gap-2 text-[11px] text-center border-y border-slate-100 py-2.5">
-              <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-800 font-semibold">
-                <span className="block text-sm">{answeredCount}</span> Answered
+            <div className="grid grid-cols-3 gap-2 text-[11px] text-center border-y border-[#1e2d4a] py-2.5">
+              <div className="p-2 bg-emerald-950/60 border border-emerald-800/40 rounded-xl text-emerald-300 font-semibold">
+                <span className="block text-sm font-bold">{answeredCount}</span> {t("student.answered")}
               </div>
-              <div className="p-1.5 bg-purple-50 rounded-lg text-purple-800 font-semibold">
-                <span className="block text-sm">{reviewCount}</span> In Review
+              <div className="p-2 bg-purple-950/60 border border-purple-800/40 rounded-xl text-purple-300 font-semibold">
+                <span className="block text-sm font-bold">{reviewCount}</span> {t("student.inReview")}
               </div>
-              <div className="p-1.5 bg-slate-100 rounded-lg text-slate-700 font-semibold">
-                <span className="block text-sm">{totalQuestions - answeredCount}</span> Pending
+              <div className="p-2 bg-[#162238] border border-[#1e2d4a] rounded-xl text-slate-300 font-semibold">
+                <span className="block text-sm font-bold">{totalQuestions - answeredCount}</span> {t("student.unanswered")}
               </div>
             </div>
 
@@ -916,13 +986,13 @@ export default function ExamTakePage() {
                 const inReview = ans?.is_marked_for_review;
                 const isCurrent = idx === currentIdx;
 
-                let btnBg = "bg-slate-100 text-slate-700 hover:bg-slate-200";
+                let btnBg = "bg-[#162238] text-slate-300 border border-[#1e2d4a] hover:bg-[#1a2744]";
                 if (answered && inReview) {
-                  btnBg = "bg-purple-600 text-white";
+                  btnBg = "bg-purple-600 text-white font-bold border border-purple-400";
                 } else if (inReview) {
-                  btnBg = "bg-purple-100 text-purple-700 border border-purple-300";
+                  btnBg = "bg-purple-950/80 text-purple-300 border border-purple-500/60";
                 } else if (answered) {
-                  btnBg = "bg-emerald-600 text-white";
+                  btnBg = "bg-emerald-600 text-white font-bold border border-emerald-400";
                 }
 
                 return (
@@ -931,7 +1001,7 @@ export default function ExamTakePage() {
                     type="button"
                     onClick={() => setCurrentIdx(idx)}
                     className={`h-10 rounded-xl font-bold text-xs flex items-center justify-center transition-all ${btnBg} ${
-                      isCurrent ? "ring-2 ring-indigo-600 ring-offset-2 scale-105 shadow-sm" : ""
+                      isCurrent ? "ring-2 ring-teal-400 ring-offset-2 ring-offset-[#0b132b] scale-105 shadow-md" : ""
                     }`}
                   >
                     {idx + 1}
@@ -941,15 +1011,15 @@ export default function ExamTakePage() {
             </div>
 
             {/* Legend */}
-            <div className="pt-2 border-t border-slate-100 space-y-1.5 text-[11px] text-slate-500">
+            <div className="pt-2 border-t border-[#1e2d4a] space-y-1.5 text-[11px] text-slate-400">
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-emerald-600"></span> Answered
+                <span className="w-3 h-3 rounded-full bg-emerald-600"></span> {t("student.answered")}
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-slate-200"></span> Unanswered
+                <span className="w-3 h-3 rounded-full bg-[#162238] border border-[#1e2d4a]"></span> {t("student.unanswered")}
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-purple-600"></span> Marked for Review
+                <span className="w-3 h-3 rounded-full bg-purple-600"></span> {t("student.markedForReview")}
               </div>
             </div>
           </div>
@@ -958,59 +1028,55 @@ export default function ExamTakePage() {
 
       {/* Submit Confirmation Modal */}
       {showSubmitModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#131d33] rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-[#1e2d4a] space-y-6 text-white">
             <div className="text-center space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-950/80 text-emerald-400 border border-emerald-700/50 flex items-center justify-center mx-auto">
                 <FileCheck className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900">Finish Examination</h3>
-              <p className="text-xs text-slate-500">
-                Please verify your answer status before submitting.
+              <h3 className="text-xl font-bold">{t("student.confirmSubmitTitle")}</h3>
+              <p className="text-xs text-slate-400">
+                {t("student.confirmSubmitDesc")}
               </p>
             </div>
 
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="bg-[#162238] p-4 rounded-2xl border border-[#1e2d4a] grid grid-cols-3 gap-2 text-center text-xs">
               <div>
-                <span className="text-slate-400 block">Answered</span>
-                <span className="text-lg font-bold text-emerald-600">{answeredCount}</span>
+                <span className="text-slate-400 block">{t("student.answered")}</span>
+                <span className="text-lg font-bold text-emerald-400">{answeredCount}</span>
               </div>
               <div>
-                <span className="text-slate-400 block">Unanswered</span>
-                <span className="text-lg font-bold text-slate-700">{totalQuestions - answeredCount}</span>
+                <span className="text-slate-400 block">{t("student.unanswered")}</span>
+                <span className="text-lg font-bold text-slate-200">{totalQuestions - answeredCount}</span>
               </div>
               <div>
-                <span className="text-slate-400 block">In Review</span>
-                <span className="text-lg font-bold text-purple-600">{reviewCount}</span>
+                <span className="text-slate-400 block">{t("student.inReview")}</span>
+                <span className="text-lg font-bold text-purple-400">{reviewCount}</span>
               </div>
             </div>
-
-            <p className="text-xs text-slate-600 text-center leading-relaxed">
-              Once submitted, you cannot modify your answers. The automatic evaluation engine will grade objective answers and initiate AI evaluation.
-            </p>
 
             <div className="flex items-center gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setShowSubmitModal(false)}
                 disabled={submitting}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-colors"
+                className="flex-1 py-2.5 rounded-xl border border-[#1e2d4a] bg-[#162238] text-slate-200 font-semibold text-sm hover:bg-[#1a2744] transition-colors"
               >
-                Return to Exam
+                {t("student.returnToExam")}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmSubmit}
                 disabled={submitting}
-                className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-sm hover:bg-emerald-400 transition-colors shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Submitting...
+                    <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
+                    {t("student.submitting")}
                   </>
                 ) : (
-                  "Confirm & Submit"
+                  t("student.confirmAndSubmit")
                 )}
               </button>
             </div>

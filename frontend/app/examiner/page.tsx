@@ -50,49 +50,49 @@ export default function ExaminerDashboardPage() {
     {
       title: t("examiner.questionBank"),
       value: stats?.total_questions ?? 0,
-      label: "Total Questions Available",
+      label: t("examiner.totalQuestions"),
       icon: BookOpen,
-      color: "text-blue-600 bg-blue-50 border-blue-100",
+      color: "text-teal-400 bg-teal-500/10 border-teal-500/20",
       href: "/examiner/questions",
     },
     {
       title: t("examiner.totalExams"),
       value: stats?.total_exams ?? 0,
-      label: "Exams Configured",
+      label: t("examiner.totalExams"),
       icon: FileSpreadsheet,
-      color: "text-indigo-600 bg-indigo-50 border-indigo-100",
+      color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
       href: "/examiner/exams",
     },
     {
       title: t("common.active"),
       value: stats?.active_exams ?? 0,
-      label: "Currently Open for Students",
+      label: t("student.openNow"),
       icon: Activity,
-      color: "text-emerald-600 bg-emerald-50 border-emerald-100",
+      color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
       href: "/examiner/exams",
     },
     {
       title: t("common.completed"),
       value: stats?.completed_exams ?? 0,
-      label: "Exam Windows Closed",
+      label: t("student.closed"),
       icon: CheckCircle2,
-      color: "text-slate-600 bg-slate-50 border-slate-200",
+      color: "text-slate-300 bg-slate-800/80 border-slate-700",
       href: "/examiner/exams",
     },
     {
       title: t("examiner.pendingEvaluations"),
       value: stats?.pending_evaluations ?? 0,
-      label: "Awaiting Result Aggregation",
+      label: t("common.evaluationPending"),
       icon: Clock,
-      color: "text-amber-600 bg-amber-50 border-amber-100",
+      color: "text-amber-300 bg-amber-500/10 border-amber-500/20",
       href: "/examiner/results",
     },
     {
       title: t("nav.proctoringReview"),
       value: stats?.flagged_sessions ?? 0,
-      label: "Proctoring Review Recommended",
+      label: t("student.proctoring"),
       icon: ShieldAlert,
-      color: "text-rose-600 bg-rose-50 border-rose-100",
+      color: "text-rose-400 bg-rose-500/10 border-rose-500/20",
       href: "/examiner/proctoring",
     },
   ];
@@ -102,8 +102,8 @@ export default function ExaminerDashboardPage() {
       {/* Header & Quick Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t("examiner.dashboard")}</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">{t("examiner.dashboard")}</h1>
+          <p className="text-sm text-slate-400 mt-1">
             {t("examiner.subtitle")}
           </p>
         </div>
@@ -111,21 +111,21 @@ export default function ExaminerDashboardPage() {
           <button
             onClick={fetchDashboardData}
             disabled={loading}
-            className="p-2 text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+            className="p-2 text-slate-300 hover:text-white bg-[#131D33] border border-slate-800 rounded-xl hover:bg-slate-800 transition-colors shadow-sm"
             title={t("common.refresh")}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
           <Link
             href="/examiner/questions"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-slate-200 bg-[#131D33] border border-slate-800 rounded-xl hover:bg-slate-800 shadow-sm transition-colors"
           >
-            <BookOpen className="w-4 h-4 text-slate-500" />
+            <BookOpen className="w-4 h-4 text-teal-400" />
             <span>{t("examiner.questionBank")}</span>
           </Link>
           <Link
             href="/examiner/exams/create"
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-slate-950 bg-teal-500 rounded-xl hover:bg-teal-400 shadow-sm transition-colors"
           >
             <PlusCircle className="w-4 h-4" />
             <span>{t("examiner.createExam")}</span>
@@ -135,17 +135,17 @@ export default function ExaminerDashboardPage() {
 
       {/* Error state */}
       {error && (
-        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-3 text-rose-700 text-sm">
-          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-500" />
+        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-800/80 flex items-start gap-3 text-rose-300 text-sm">
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-400" />
           <div className="flex-1">
-            <p className="font-semibold">Unable to fetch dashboard metrics</p>
-            <p className="text-rose-600 mt-0.5">{error}</p>
+            <p className="font-semibold">{t("common.error")}</p>
+            <p className="text-rose-400 mt-0.5">{error}</p>
           </div>
           <button
             onClick={fetchDashboardData}
-            className="px-3 py-1 bg-rose-600 text-white rounded-md text-xs font-semibold hover:bg-rose-700"
+            className="px-3 py-1 bg-rose-600 text-white rounded-md text-xs font-semibold hover:bg-rose-500"
           >
-            Retry
+            {t("common.refresh")}
           </button>
         </div>
       )}
@@ -158,16 +158,16 @@ export default function ExaminerDashboardPage() {
             <Link
               key={idx}
               href={card.href}
-              className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all group flex flex-col justify-between"
+              className="bg-[#131D33] p-5 rounded-2xl border border-slate-800 shadow-sm hover:border-slate-700 hover:shadow-md transition-all group flex flex-col justify-between"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     {card.title}
                   </span>
-                  <div className="text-3xl font-extrabold text-slate-900 mt-2">
+                  <div className="text-3xl font-extrabold text-slate-100 mt-2">
                     {loading ? (
-                      <div className="h-9 w-16 bg-slate-200 rounded animate-pulse"></div>
+                      <div className="h-9 w-16 bg-slate-800 rounded animate-pulse"></div>
                     ) : (
                       card.value
                     )}
@@ -177,9 +177,9 @@ export default function ExaminerDashboardPage() {
                   <Icon className="w-6 h-6" />
                 </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
                 <span>{card.label}</span>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-teal-400 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </Link>
           );
@@ -187,61 +187,61 @@ export default function ExaminerDashboardPage() {
       </div>
 
       {/* Recent Examinations List */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+      <div className="bg-[#131D33] rounded-2xl border border-slate-800 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-slate-800 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-slate-900">Recent Examinations</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Recently configured examinations and their schedules.</p>
+            <h2 className="text-base font-bold text-slate-100">{t("examiner.recentExaminations")}</h2>
+            <p className="text-xs text-slate-400 mt-0.5">{t("examiner.subtitle")}</p>
           </div>
           <Link
             href="/examiner/exams"
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+            className="text-xs font-semibold text-teal-400 hover:text-teal-300 flex items-center gap-1"
           >
-            <span>View all</span>
+            <span>{t("student.browseAll")}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-slate-400 text-sm">Loading recent examinations...</div>
+          <div className="p-8 text-center text-slate-400 text-sm">{t("common.loading")}</div>
         ) : recentExams.length === 0 ? (
           <div className="p-12 text-center">
-            <FileSpreadsheet className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-slate-700">No examinations created yet</p>
+            <FileSpreadsheet className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+            <p className="text-sm font-semibold text-slate-300">{t("examiner.createFirstExam")}</p>
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              Get started by creating your first online examination with randomized question paper generation.
+              {t("examiner.subtitle")}
             </p>
             <Link
               href="/examiner/exams/create"
-              className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+              className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-teal-500 text-slate-950 text-xs font-semibold rounded-xl hover:bg-teal-400 transition-colors"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>Create First Exam</span>
+              <span>{t("examiner.createExam")}</span>
             </Link>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-800/80">
             {recentExams.map((exam) => (
               <div
                 key={exam.id}
-                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 transition-colors"
+                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-800/40 transition-colors"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm text-slate-900 truncate">{exam.title}</span>
-                    <span className="px-2 py-0.5 text-[11px] font-semibold bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100">
+                    <span className="font-semibold text-sm text-slate-100 truncate">{exam.title}</span>
+                    <span className="px-2 py-0.5 text-[11px] font-semibold bg-teal-500/10 text-teal-300 rounded-full border border-teal-500/20">
                       {exam.subject}
                     </span>
                     {exam.proctoring_enabled && (
-                      <span className="px-2 py-0.5 text-[11px] font-semibold bg-amber-50 text-amber-700 rounded-full border border-amber-200">
-                        Proctored
+                      <span className="px-2 py-0.5 text-[11px] font-semibold bg-amber-500/10 text-amber-300 rounded-full border border-amber-500/20">
+                        {t("student.proctoring")}
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-slate-500 mt-1.5 flex-wrap">
-                    <span>Duration: {exam.duration} mins</span>
+                  <div className="flex items-center gap-4 text-xs text-slate-400 mt-1.5 flex-wrap">
+                    <span>{t("student.duration")}: {exam.duration} {t("student.minutes")}</span>
                     <span>•</span>
-                    <span>Questions: {exam.question_count}</span>
+                    <span>{t("student.questions")}: {exam.question_count}</span>
                     <span>•</span>
                     <span>Start: {new Date(exam.start_time).toLocaleString()}</span>
                   </div>
@@ -249,9 +249,9 @@ export default function ExaminerDashboardPage() {
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <Link
                     href={`/examiner/exams/${exam.id}`}
-                    className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
+                    className="px-3 py-1.5 text-xs font-medium text-slate-200 bg-[#0B132B] border border-slate-700 rounded-xl hover:bg-slate-800 transition-colors"
                   >
-                    View Details
+                    {t("common.details")}
                   </Link>
                 </div>
               </div>

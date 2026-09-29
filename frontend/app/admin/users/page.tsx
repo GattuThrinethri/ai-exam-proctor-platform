@@ -13,8 +13,10 @@ import {
   X
 } from "lucide-react";
 import { adminApi, AdminUser } from "@/services/api";
+import { useLanguage } from "@/i18n";
 
 export default function AdminUsersPage() {
+  const { t } = useLanguage();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,8 +100,8 @@ export default function AdminUsersPage() {
 
   const filteredUsers = users.filter((u) => {
     if (!search) return true;
-    const pat = search.toLowerCase();
-    return u.name.toLowerCase().includes(pat) || u.email.toLowerCase().includes(pat);
+    const q = search.toLowerCase();
+    return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
   });
 
   return (
@@ -107,172 +109,147 @@ export default function AdminUsersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">User Account Management</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Provision user accounts, update authorization roles with last-admin safeguards, and manage status.
+          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">{t("admin.userList")}</h1>
+          <p className="text-sm text-slate-400 mt-1">
+            {t("admin.userAccountManagement")}
           </p>
         </div>
 
         <button
           onClick={() => setShowModal(true)}
-          className="px-4 py-2.5 rounded-xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors shadow-sm flex items-center gap-2 self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm hover:bg-teal-400 transition-colors shadow-sm self-start sm:self-auto"
         >
-          <UserPlus className="w-4 h-4" /> Provision New User
+          <UserPlus className="w-4 h-4" /> {t("admin.provisionUser")}
         </button>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3">
+        <div className="bg-rose-950/40 border border-rose-800/80 text-rose-300 px-4 py-3 rounded-xl flex items-center gap-3">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <p className="text-sm">{error}</p>
         </div>
       )}
 
-      {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="relative w-full sm:w-80">
+      {/* Filter Bar */}
+      <div className="bg-[#131D33] p-4 rounded-2xl border border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or email..."
-            className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            placeholder={t("common.search")}
+            className="w-full pl-10 pr-4 py-2 text-sm bg-[#0B132B] border border-slate-700 text-slate-100 rounded-xl focus:outline-none focus:border-teal-500 placeholder-slate-500"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="px-3 py-2 text-sm bg-[#0B132B] border border-slate-700 text-slate-200 rounded-xl focus:outline-none focus:border-teal-500"
           >
-            <option value="">All Roles</option>
-            <option value="student">Students</option>
-            <option value="examiner">Examiners</option>
-            <option value="admin">Administrators</option>
+            <option value="">{t("admin.assignedRole")} (All)</option>
+            <option value="student">{t("auth.student")}</option>
+            <option value="examiner">{t("auth.examiner")}</option>
+            <option value="admin">{t("auth.admin")}</option>
           </select>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="px-3 py-2 text-sm bg-[#0B132B] border border-slate-700 text-slate-200 rounded-xl focus:outline-none focus:border-teal-500"
           >
-            <option value="">All Account States</option>
-            <option value="active">Active Only</option>
-            <option value="inactive">Deactivated Only</option>
+            <option value="">{t("admin.accountStatus")} (All)</option>
+            <option value="active">{t("common.active")}</option>
+            <option value="inactive">{t("common.inactive")}</option>
           </select>
 
           <select
             value={approvalFilter}
             onChange={(e) => setApprovalFilter(e.target.value)}
-            className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="px-3 py-2 text-sm bg-[#0B132B] border border-slate-700 text-slate-200 rounded-xl focus:outline-none focus:border-teal-500"
           >
-            <option value="">All Approvals</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending Review</option>
-            <option value="rejected">Rejected</option>
+            <option value="">{t("admin.approvalStatus")} (All)</option>
+            <option value="approved">{t("common.approved")}</option>
+            <option value="pending">{t("common.pending")}</option>
+            <option value="rejected">{t("common.rejected")}</option>
           </select>
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-[#131D33] rounded-2xl border border-slate-800 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-slate-400 text-sm">Loading user accounts...</div>
+          <div className="p-12 text-center text-slate-400 text-sm">{t("common.loading")}</div>
         ) : filteredUsers.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 text-sm">No users match your filters.</div>
+          <div className="p-12 text-center text-slate-400 text-sm">
+            No user accounts match your filter criteria.
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+            <table className="w-full text-left text-sm text-slate-300">
+              <thead className="bg-[#0B132B] text-slate-300 text-xs uppercase font-semibold border-b border-slate-800">
                 <tr>
-                  <th className="px-6 py-3.5">User Identity</th>
-                  <th className="px-6 py-3.5">Platform Role</th>
-                  <th className="px-6 py-3.5">Approval Status</th>
-                  <th className="px-6 py-3.5">Account Status</th>
-                  <th className="px-6 py-3.5">Exam Sessions</th>
-                  <th className="px-6 py-3.5">Registration Date</th>
-                  <th className="px-6 py-3.5 text-right">Administrative Actions</th>
+                  <th className="px-6 py-3.5">User Details</th>
+                  <th className="px-6 py-3.5">{t("admin.assignedRole")}</th>
+                  <th className="px-6 py-3.5">{t("admin.approvalStatus")}</th>
+                  <th className="px-6 py-3.5">{t("admin.accountStatus")}</th>
+                  <th className="px-6 py-3.5">Registered</th>
+                  <th className="px-6 py-3.5 text-right">{t("common.actions")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-800/80">
                 {filteredUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
+                  <tr key={u.id} className="hover:bg-slate-800/40 transition-colors">
                     <td className="px-6 py-4">
-                      <div>
-                        <p className="font-bold text-slate-900 leading-tight">{u.name}</p>
-                        <p className="text-xs text-slate-400 leading-tight mt-0.5">{u.email}</p>
-                      </div>
+                      <p className="font-bold text-slate-100">{u.name}</p>
+                      <p className="text-xs text-slate-400">{u.email}</p>
                     </td>
-
-                    {/* Role selector dropdown */}
                     <td className="px-6 py-4">
                       <select
                         value={u.role}
                         onChange={(e) => handleRoleChange(u.id, u.role, e.target.value)}
-                        className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border focus:outline-none ${
-                          u.role === "admin"
-                            ? "bg-red-50 text-red-700 border-red-200"
-                            : u.role === "examiner"
-                            ? "bg-purple-50 text-purple-700 border-purple-200"
-                            : "bg-indigo-50 text-indigo-700 border-indigo-200"
-                        }`}
+                        className="px-2.5 py-1 text-xs font-semibold bg-[#0B132B] border border-slate-700 text-slate-200 rounded-lg focus:outline-none focus:border-teal-500"
                       >
-                        <option value="student">Student</option>
-                        <option value="examiner">Examiner</option>
-                        <option value="admin">Admin</option>
+                        <option value="student">{t("auth.student")}</option>
+                        <option value="examiner">{t("auth.examiner")}</option>
+                        <option value="admin">{t("auth.admin")}</option>
                       </select>
                     </td>
-
-                    {/* Approval Status Badge */}
                     <td className="px-6 py-4">
-                      {u.approval_status === "approved" ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <CheckCircle className="w-3 h-3" /> Approved
-                        </span>
-                      ) : u.approval_status === "pending" ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                          <AlertCircle className="w-3 h-3" /> Pending
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                          <XCircle className="w-3 h-3" /> Rejected
-                        </span>
-                      )}
+                      <span className={`px-2.5 py-0.5 rounded text-xs font-semibold ${
+                        u.approval_status === "approved"
+                          ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
+                          : u.approval_status === "pending"
+                          ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                          : "bg-rose-500/10 text-rose-300 border border-rose-500/20"
+                      }`}>
+                        {u.approval_status}
+                      </span>
                     </td>
-
-                    {/* Active Status Badge */}
                     <td className="px-6 py-4">
-                      {u.is_active ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <CheckCircle className="w-3 h-3" /> Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200">
-                          <XCircle className="w-3 h-3" /> Inactive
-                        </span>
-                      )}
+                      <span className={`px-2.5 py-0.5 rounded text-xs font-semibold ${
+                        u.is_active
+                          ? "bg-teal-500/10 text-teal-300 border border-teal-500/20"
+                          : "bg-slate-800 text-slate-400 border border-slate-700"
+                      }`}>
+                        {u.is_active ? t("common.active") : t("common.inactive")}
+                      </span>
                     </td>
-
-                    <td className="px-6 py-4 text-xs font-semibold text-slate-700">
-                      {u.session_count} Sessions
-                    </td>
-
                     <td className="px-6 py-4 text-xs text-slate-400">
                       {new Date(u.created_at).toLocaleDateString()}
                     </td>
-
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => handleStatusToggle(u.id, u.is_active)}
-                        className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                           u.is_active
-                            ? "text-red-600 bg-red-50 hover:bg-red-100"
-                            : "text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                            ? "bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/20"
+                            : "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20"
                         }`}
                       >
-                        {u.is_active ? "Deactivate" : "Activate"}
+                        {u.is_active ? t("admin.deactivate") : t("admin.activate")}
                       </button>
                     </td>
                   </tr>
@@ -285,90 +262,76 @@ export default function AdminUsersPage() {
 
       {/* Provision User Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-slate-900">Provision User Account</h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-              >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+          <div className="bg-[#131D33] w-full max-w-md rounded-2xl shadow-xl border border-slate-800 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-[#0B132B]">
+              <h2 className="text-base font-bold text-slate-100">{t("admin.provisionUser")}</h2>
+              <button onClick={() => setShowModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-200">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateUser} className="space-y-4">
+            <form onSubmit={handleCreateUser} className="p-6 space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block mb-1">
-                  Full Name
-                </label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">{t("auth.fullName")}</label>
                 <input
                   type="text"
                   required
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="e.g. Professor Alex Vance"
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 bg-[#0B132B] border border-slate-700 rounded-xl text-slate-100 text-xs focus:border-teal-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block mb-1">
-                  Email Address
-                </label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">{t("auth.emailAddress")}</label>
                 <input
                   type="email"
                   required
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
-                  placeholder="name@university.edu"
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 bg-[#0B132B] border border-slate-700 rounded-xl text-slate-100 text-xs focus:border-teal-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block mb-1">
-                  Temporary Password
-                </label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">{t("auth.password")}</label>
                 <input
                   type="password"
                   required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Minimum 8 characters..."
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 bg-[#0B132B] border border-slate-700 rounded-xl text-slate-100 text-xs focus:border-teal-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block mb-1">
-                  Assigned Platform Role
-                </label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">{t("admin.assignedRole")}</label>
                 <select
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 bg-[#0B132B] border border-slate-700 rounded-xl text-slate-100 text-xs focus:border-teal-500 focus:outline-none"
                 >
-                  <option value="student">Student (Candidate)</option>
-                  <option value="examiner">Examiner (Question Bank & Exam Manager)</option>
-                  <option value="admin">Administrator (Platform Governance)</option>
+                  <option value="student">{t("auth.student")}</option>
+                  <option value="examiner">{t("auth.examiner")}</option>
+                  <option value="admin">{t("auth.admin")}</option>
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="pt-4 border-t border-slate-800 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                  className="px-4 py-2 text-xs font-semibold text-slate-300 bg-[#0B132B] border border-slate-700 rounded-xl hover:bg-slate-800"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
-                  className="px-5 py-2 rounded-xl bg-red-600 text-white font-semibold text-xs hover:bg-red-700 shadow-sm disabled:opacity-50"
+                  className="px-4 py-2 text-xs font-semibold text-slate-950 bg-teal-500 rounded-xl hover:bg-teal-400 disabled:opacity-50"
                 >
-                  {creating ? "Provisioning..." : "Create Account"}
+                  {creating ? t("common.loading") : t("admin.provisionUser")}
                 </button>
               </div>
             </form>

@@ -102,6 +102,7 @@ export interface Exam {
   gaze_sensitivity: "low" | "medium" | "high";
   max_tab_switch_warnings: number;
   total_marks?: number;
+  pass_marks?: number;
   questions?: Question[];
   created_at?: string;
 }
@@ -120,12 +121,15 @@ export interface ExaminerResult {
   session_id: number;
   exam_id: number;
   exam_title: string;
+  subject?: string;
   student_id: number;
   student_name: string;
   student_email: string;
   total_score: number;
   objective_score: number;
   subjective_score: number;
+  max_score?: number;
+  percentage?: number;
   status: string;
   published: boolean;
   requires_evaluation: boolean;
@@ -187,11 +191,16 @@ export interface ProctoringSession {
   session_id: number;
   exam_id: number;
   exam_title: string;
+  subject?: string;
   student_id: number;
   student_name: string;
   student_email: string;
   suspicion_score: number;
   event_count: number;
+  tab_switch_count?: number;
+  gaze_deviation_count?: number;
+  face_not_visible_count?: number;
+  multiple_faces_count?: number;
   status: string;
   started_at: string;
   submitted_at?: string | null;
@@ -205,8 +214,10 @@ export interface ProctorEvent {
   timestamp: string;
   severity: "low" | "medium" | "high" | "critical" | string;
   suspicion_increment: number;
+  details?: string | null;
   metadata_json?: Record<string, any> | null;
   webcam_snapshot_url?: string | null;
+  snapshot_url?: string | null;
 }
 
 const API_BASE = (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL : "").replace(/\/$/, "");
@@ -521,6 +532,8 @@ export interface AdminPlatformStats {
   completed_sessions: number;
   flagged_sessions: number;
   average_score: number;
+  pending_examiner_approvals?: number;
+  total_questions?: number;
 }
 
 export interface AdminUser {

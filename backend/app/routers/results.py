@@ -179,58 +179,59 @@ async def get_session_result(
     answers_by_qid = {ans.question_id: ans for ans in ans_res.scalars().all()}
 
     reviews: List[QuestionReviewItem] = []
-    for eq in exam_questions:
-        q = eq.question
-        if not q:
-            continue
-        ans = answers_by_qid.get(q.id)
+    if not is_pending:
+        for eq in exam_questions:
+            q = eq.question
+            if not q:
+                continue
+            ans = answers_by_qid.get(q.id)
 
-        # Awarded marks - strictly masked if pending student view
-        awarded_score_val = None
-        if not is_pending and ans:
-            subj_score = ans.examiner_score if ans.examiner_score is not None else (ans.ai_score or 0.0)
-            awarded_score_val = round((ans.auto_score or 0.0) + subj_score, 2)
+            # Awarded marks - strictly masked if pending student view
+            awarded_score_val = None
+            if ans:
+                subj_score = ans.examiner_score if ans.examiner_score is not None else (ans.ai_score or 0.0)
+                awarded_score_val = round((ans.auto_score or 0.0) + subj_score, 2)
 
-        # Options list sanitized for student
-        options_data = None
-        if q.options:
-            options_data = [
-                {
-                    "id": opt.id,
-                    "option_text": opt.option_text,
-                    "is_correct": opt.is_correct if can_view_solutions else None
-                }
-                for opt in q.options
-            ]
+            # Options list sanitized for student
+            options_data = None
+            if q.options:
+                options_data = [
+                    {
+                        "id": opt.id,
+                        "option_text": opt.option_text,
+                        "is_correct": opt.is_correct if can_view_solutions else None
+                    }
+                    for opt in q.options
+                ]
 
-        # Extract correct options
-        correct_ids = None
-        correct_texts = None
-        if can_view_solutions and q.options:
-            correct_opts = [opt for opt in q.options if opt.is_correct]
-            correct_ids = [opt.id for opt in correct_opts]
-            correct_texts = [opt.option_text for opt in correct_opts]
+            # Extract correct options
+            correct_ids = None
+            correct_texts = None
+            if can_view_solutions and q.options:
+                correct_opts = [opt for opt in q.options if opt.is_correct]
+                correct_ids = [opt.id for opt in correct_opts]
+                correct_texts = [opt.option_text for opt in correct_opts]
 
-        reviews.append(
-            QuestionReviewItem(
-                question_id=q.id,
-                question_text=q.question_text,
-                question_type=q.question_type.value if hasattr(q.question_type, "value") else str(q.question_type),
-                difficulty=q.difficulty,
-                marks=q.marks,
-                awarded_score=awarded_score_val,
-                student_selected_option_ids=ans.selected_option_ids if ans else None,
-                student_answer_text=ans.answer_text if ans else None,
-                student_image_url=ans.image_url if ans else None,
-                ocr_extracted_text=ans.ocr_text if ans else None,
-                options=options_data,
-                correct_option_ids=correct_ids,
-                correct_options_text=correct_texts,
-                model_answer=q.model_answer if can_view_solutions else None,
-                ai_justification=ans.ai_justification if (can_view_solutions and ans) else None,
-                ai_feedback=ans.ai_feedback if (can_view_solutions and ans) else None,
+            reviews.append(
+                QuestionReviewItem(
+                    question_id=q.id,
+                    question_text=q.question_text,
+                    question_type=q.question_type.value if hasattr(q.question_type, "value") else str(q.question_type),
+                    difficulty=q.difficulty,
+                    marks=q.marks,
+                    awarded_score=awarded_score_val,
+                    student_selected_option_ids=ans.selected_option_ids if ans else None,
+                    student_answer_text=ans.answer_text if ans else None,
+                    student_image_url=ans.image_url if ans else None,
+                    ocr_extracted_text=ans.ocr_text if ans else None,
+                    options=options_data,
+                    correct_option_ids=correct_ids,
+                    correct_options_text=correct_texts,
+                    model_answer=q.model_answer if can_view_solutions else None,
+                    ai_justification=ans.ai_justification if (can_view_solutions and ans) else None,
+                    ai_feedback=ans.ai_feedback if (can_view_solutions and ans) else None,
+                )
             )
-        )
 
     return StudentResultDetailResponse(
         id=result_obj.id,

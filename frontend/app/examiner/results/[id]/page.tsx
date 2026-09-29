@@ -23,6 +23,7 @@ import {
   ExaminerQuestionEvaluationItem,
   QuestionScoreInput,
 } from "../../../../services/api";
+import { useLanguage } from "../../../../i18n";
 
 interface PageProps {
   params?: { id?: string };
@@ -40,6 +41,7 @@ function isSubjectiveType(type?: string): boolean {
 }
 
 export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
+  const { t } = useLanguage();
   const router = useRouter();
   const routeParams = useParams();
 
@@ -181,10 +183,9 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
   // Loading State
   if (loading) {
     return (
-      <div className="py-24 text-center text-slate-500 text-sm">
-        <div className="w-9 h-9 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-        <p className="font-medium text-slate-700">Loading candidate submission paper...</p>
-        <p className="text-xs text-slate-400 mt-1">Retrieving candidate responses and question rubric</p>
+      <div className="py-24 text-center text-slate-400 text-sm">
+        <div className="w-9 h-9 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <p className="font-medium text-slate-300">{t("common.loading")}</p>
       </div>
     );
   }
@@ -193,26 +194,26 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
   if (error && !sessionData) {
     return (
       <div className="max-w-xl mx-auto py-16 text-center space-y-4">
-        <div className="p-6 bg-red-50 text-red-800 rounded-2xl border border-red-200 text-sm space-y-3">
-          <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mx-auto">
+        <div className="p-6 bg-rose-950/40 text-rose-300 rounded-2xl border border-rose-800/80 text-sm space-y-3">
+          <div className="w-12 h-12 bg-rose-500/20 text-rose-400 rounded-xl flex items-center justify-center mx-auto">
             <AlertCircle className="w-6 h-6" />
           </div>
-          <h3 className="font-bold text-base text-red-900">Unable to Load Evaluation</h3>
-          <p className="text-xs text-red-700">{error}</p>
+          <h3 className="font-bold text-base text-rose-200">{t("common.error")}</h3>
+          <p className="text-xs text-rose-300">{error}</p>
           <div className="pt-2 flex items-center justify-center gap-3">
             <button
               onClick={() => {
                 if (sessionId) loadEvaluation(sessionId);
               }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors"
             >
-              <RefreshCw className="w-3.5 h-3.5" /> Retry
+              <RefreshCw className="w-3.5 h-3.5" /> {t("common.refresh")}
             </button>
             <Link
               href="/examiner/results"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-50 transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0B132B] border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Return to Results
+              <ArrowLeft className="w-3.5 h-3.5" /> {t("nav.examResults")}
             </Link>
           </div>
         </div>
@@ -224,18 +225,18 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
   if (!sessionData) {
     return (
       <div className="max-w-md mx-auto py-16 text-center space-y-4">
-        <div className="p-6 bg-amber-50 text-amber-800 rounded-2xl border border-amber-200 text-sm">
-          <AlertCircle className="w-6 h-6 text-amber-600 mx-auto mb-2" />
+        <div className="p-6 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/20 text-sm">
+          <AlertCircle className="w-6 h-6 text-amber-400 mx-auto mb-2" />
           <p className="font-bold">No Evaluation Found</p>
-          <p className="text-xs text-amber-700 mt-1">
+          <p className="text-xs text-amber-400 mt-1">
             The requested examination session could not be found or has not been submitted yet.
           </p>
           <div className="mt-4">
             <Link
               href="/examiner/results"
-              className="text-xs font-bold text-indigo-600 hover:underline inline-flex items-center gap-1"
+              className="text-xs font-bold text-teal-400 hover:underline inline-flex items-center gap-1"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Candidate Results
+              <ArrowLeft className="w-3.5 h-3.5" /> {t("nav.examResults")}
             </Link>
           </div>
         </div>
@@ -246,99 +247,96 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-20">
       {/* Top Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
           <Link
             href="/examiner/results"
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 mb-2"
+            className="text-xs font-semibold text-teal-400 hover:text-teal-300 inline-flex items-center gap-1 mb-2"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Candidate Results
+            <ArrowLeft className="w-3.5 h-3.5" /> {t("nav.examResults")}
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Manual Evaluation & Review</h1>
+            <h1 className="text-2xl font-bold text-slate-100 tracking-tight">{t("examiner.evaluate")}</h1>
             {sessionData.published ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Result Published
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> {t("examiner.evaluatedStatus")}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300">
-                <Clock className="w-3.5 h-3.5 text-amber-600" /> Evaluation Pending
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                <Clock className="w-3.5 h-3.5 text-amber-400" /> {t("common.evaluationPending")}
               </span>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <Clock className="w-4 h-4" /> Submitted:{" "}
+        <div className="flex items-center gap-2 text-xs text-slate-400">
+          <Clock className="w-4 h-4" /> {t("examiner.submittedAt")}:{" "}
           {sessionData.submitted_at ? new Date(sessionData.submitted_at).toLocaleString() : "Auto-submitted"}
         </div>
       </div>
 
       {/* Messages */}
       {error && (
-        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
+        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-800/80 text-rose-300 text-sm flex items-center gap-2">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {successMessage && (
-        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2">
-          <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600" />
+        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
           <span>{successMessage}</span>
         </div>
       )}
 
       {/* Candidate & Exam Metadata Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="bg-[#131D33] rounded-2xl border border-slate-800 p-6 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="space-y-1">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <User className="w-3.5 h-3.5" /> Candidate
+            <User className="w-3.5 h-3.5 text-teal-400" /> {t("examiner.candidateName")}
           </p>
-          <p className="font-bold text-slate-900 text-base">{sessionData.student_name}</p>
-          <p className="text-xs text-slate-500">{sessionData.student_email}</p>
+          <p className="font-bold text-slate-100 text-base">{sessionData.student_name}</p>
+          <p className="text-xs text-slate-400">{sessionData.student_email}</p>
         </div>
 
         <div className="space-y-1">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5" /> Examination
+            <BookOpen className="w-3.5 h-3.5 text-teal-400" /> {t("examiner.examTitle")}
           </p>
-          <p className="font-bold text-slate-900 text-base">{sessionData.exam_title}</p>
-          <p className="text-xs text-slate-500">{sessionData.subject} • {sessionData.duration_minutes} Mins</p>
+          <p className="font-bold text-slate-100 text-base">{sessionData.exam_title}</p>
+          <p className="text-xs text-slate-400">{sessionData.subject} • {sessionData.duration_minutes} Mins</p>
         </div>
 
         <div className="space-y-1">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Objective Marks</p>
-          <p className="text-xl font-extrabold text-slate-800">
+          <p className="text-xl font-extrabold text-slate-100">
             {(sessionData.objective_score || 0).toFixed(2)}{" "}
             <span className="text-xs font-medium text-slate-400">pts</span>
           </p>
-          <p className="text-xs text-slate-400">Auto-evaluated</p>
+          <p className="text-xs text-slate-500">Auto-evaluated</p>
         </div>
 
-        <div className="space-y-1 bg-indigo-50/60 p-3 rounded-xl border border-indigo-100">
-          <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wider flex items-center gap-1">
-            <Award className="w-3.5 h-3.5" /> Live Computed Total
+        <div className="space-y-1 bg-[#0B132B] p-3 rounded-xl border border-slate-800">
+          <p className="text-xs font-semibold text-teal-400 uppercase tracking-wider flex items-center gap-1">
+            <Award className="w-3.5 h-3.5" /> Computed Total
           </p>
           <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-indigo-900">{computedTotalScore.toFixed(2)}</span>
-            <span className="text-xs font-semibold text-indigo-500">/ {sessionData.max_score} pts</span>
+            <span className="text-2xl font-black text-slate-100">{computedTotalScore.toFixed(2)}</span>
+            <span className="text-xs font-semibold text-slate-400">/ {sessionData.max_score} pts</span>
           </div>
-          <p className="text-xs font-bold text-indigo-700">{computedPercentage}% Overall</p>
+          <p className="text-xs font-bold text-teal-400">{computedPercentage}% Overall</p>
         </div>
       </div>
 
       {/* Evaluation Form */}
       <form onSubmit={handleFinalize} className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900 tracking-tight">Question Submissions & Scoring</h2>
-          <span className="text-xs text-slate-500 font-medium">
-            {sessionData.questions?.length || 0} Questions Total
-          </span>
+          <h2 className="text-lg font-bold text-slate-100 tracking-tight">{t("student.questions")} ({sessionData.questions?.length || 0})</h2>
         </div>
 
         {sessionData.questions?.length === 0 ? (
-          <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-500 text-sm">
+          <div className="p-12 text-center bg-[#131D33] rounded-2xl border border-slate-800 text-slate-400 text-sm">
             No questions found for this examination submission.
           </div>
         ) : (
@@ -351,32 +349,32 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
               return (
                 <div
                   key={q.question_id}
-                  className={`bg-white rounded-2xl border p-6 shadow-sm space-y-4 transition-all ${
+                  className={`bg-[#131D33] rounded-2xl border p-6 shadow-sm space-y-4 transition-all ${
                     isSubjective
-                      ? "border-indigo-200 ring-1 ring-indigo-100/50"
-                      : "border-slate-200"
+                      ? "border-teal-500/30 ring-1 ring-teal-500/10"
+                      : "border-slate-800"
                   }`}
                 >
                   {/* Header */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
                     <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center">
+                      <span className="w-6 h-6 rounded-full bg-slate-800 text-slate-200 font-bold text-xs flex items-center justify-center">
                         {idx + 1}
                       </span>
-                      <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 uppercase">
+                      <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-800 text-slate-300 uppercase">
                         {displayType}
                       </span>
-                      <span className="text-xs text-slate-400 capitalize">Difficulty: {q.difficulty}</span>
-                      <span className="text-xs font-bold text-slate-600">Maximum Marks: {q.marks}</span>
+                      <span className="text-xs text-slate-400 capitalize">{t("student.difficulty")}: {q.difficulty}</span>
+                      <span className="text-xs font-bold text-slate-300">{t("examiner.marks")}: {q.marks}</span>
                     </div>
 
                     <div>
                       {isSubjective ? (
-                        <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                          Manual Evaluation Required
+                        <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                          {t("evaluation.manualEvaluationNotice")}
                         </span>
                       ) : (
-                        <span className="px-2.5 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        <span className="px-2.5 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
                           Auto Score: {q.auto_score ?? 0} / {q.marks}
                         </span>
                       )}
@@ -384,11 +382,11 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
                   </div>
 
                   {/* Question Text */}
-                  <p className="text-sm font-semibold text-slate-800 leading-relaxed">{q.question_text}</p>
+                  <p className="text-sm font-semibold text-slate-100 leading-relaxed">{q.question_text}</p>
 
                   {/* Candidate's Submitted Response */}
-                  <div className="bg-slate-50 p-4 rounded-xl space-y-3 text-xs border border-slate-100">
-                    <p className="font-semibold text-slate-500 uppercase tracking-wider">Student Answer:</p>
+                  <div className="bg-[#0B132B] p-4 rounded-xl space-y-3 text-xs border border-slate-800">
+                    <p className="font-semibold text-slate-400 uppercase tracking-wider">{t("examiner.studentAnswer")}:</p>
 
                     {/* MCQ / Multi-select Options */}
                     {q.options && q.options.length > 0 && (
@@ -402,29 +400,29 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
                               key={opt.id}
                               className={`p-2.5 rounded-lg border flex items-center justify-between text-xs ${
                                 wasSelected && isCorrect
-                                  ? "bg-emerald-50/80 border-emerald-300 text-emerald-900 font-medium"
+                                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-200 font-medium"
                                   : wasSelected && !isCorrect
-                                  ? "bg-red-50/80 border-red-300 text-red-900"
+                                  ? "bg-rose-500/10 border-rose-500/30 text-rose-200"
                                   : isCorrect
-                                  ? "bg-emerald-50/30 border-emerald-200 text-emerald-800 font-medium"
-                                  : "bg-white border-slate-200 text-slate-600"
+                                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
+                                  : "bg-[#131D33] border-slate-800 text-slate-300"
                               }`}
                             >
                               <span className="flex items-center gap-2">
-                                <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${wasSelected ? "bg-indigo-600 border-indigo-600 text-white" : "border-slate-300"}`}>
+                                <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${wasSelected ? "bg-teal-500 border-teal-500 text-slate-950" : "border-slate-600"}`}>
                                   {wasSelected && <Check className="w-2.5 h-2.5" />}
                                 </span>
                                 {opt.option_text}
                               </span>
                               <div className="flex items-center gap-2">
                                 {wasSelected && (
-                                  <span className="text-[10px] font-bold text-indigo-700 bg-white/80 px-2 py-0.5 rounded">
-                                    Selected by Student
+                                  <span className="text-[10px] font-bold text-teal-300 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
+                                    {t("student.answered")}
                                   </span>
                                 )}
                                 {isCorrect && (
-                                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded">
-                                    Correct Option
+                                  <span className="text-[10px] font-bold text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                    {t("examiner.isCorrect")}
                                   </span>
                                 )}
                               </div>
@@ -436,7 +434,7 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
 
                     {/* Text Answer */}
                     {q.student_answer_text && (
-                      <div className="p-3.5 bg-white rounded-lg border border-slate-200 text-slate-800 leading-relaxed whitespace-pre-wrap font-mono text-xs">
+                      <div className="p-3.5 bg-[#131D33] rounded-lg border border-slate-800 text-slate-200 leading-relaxed whitespace-pre-wrap font-mono text-xs">
                         {q.student_answer_text}
                       </div>
                     )}
@@ -444,17 +442,17 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
                     {/* Image Answer */}
                     {q.student_image_url && (
                       <div className="space-y-2 pt-2">
-                        <div className="flex items-center gap-2 text-indigo-600 font-semibold">
-                          <ImageIcon className="w-4 h-4" /> Handwritten Answer Sheet Uploaded:
+                        <div className="flex items-center gap-2 text-teal-400 font-semibold">
+                          <ImageIcon className="w-4 h-4" /> {t("student.handwrittenUpload")}:
                         </div>
                         <img
                           src={q.student_image_url}
                           alt="Handwritten answer sheet"
-                          className="max-h-80 rounded-lg border border-slate-200 object-contain bg-white"
+                          className="max-h-80 rounded-lg border border-slate-800 object-contain bg-[#131D33]"
                         />
                         {q.ocr_extracted_text && (
-                          <div className="p-3 bg-white rounded-lg border border-slate-200 text-slate-700">
-                            <span className="font-semibold text-slate-500 block mb-1">OCR Transcribed Text:</span>
+                          <div className="p-3 bg-[#131D33] rounded-lg border border-slate-800 text-slate-300">
+                            <span className="font-semibold text-slate-400 block mb-1">{t("student.ocrText")}:</span>
                             <p className="italic font-mono text-[11px]">{q.ocr_extracted_text}</p>
                           </div>
                         )}
@@ -462,17 +460,17 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
                     )}
 
                     {!q.student_answer_text && !q.student_image_url && (!q.student_selected_option_ids || q.student_selected_option_ids.length === 0) && (
-                      <p className="text-slate-400 italic">No answer submitted by candidate for this question.</p>
+                      <p className="text-slate-500 italic">{t("student.unanswered")}</p>
                     )}
                   </div>
 
                   {/* Expected Model Answer & Rubric for Subjective Questions */}
                   {(q.expected_answer || q.model_answer) && (
-                    <div className="p-3.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs space-y-1">
-                      <p className="font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                        <BookOpen className="w-3.5 h-3.5 text-slate-500" /> Model Answer / Rubric:
+                    <div className="p-3.5 bg-[#0B132B] border border-slate-800 rounded-xl text-xs space-y-1">
+                      <p className="font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <BookOpen className="w-3.5 h-3.5 text-teal-400" /> {t("examiner.modelAnswer")}:
                       </p>
-                      <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      <p className="text-slate-200 leading-relaxed whitespace-pre-wrap">
                         {q.model_answer || q.expected_answer}
                       </p>
                     </div>
@@ -480,9 +478,9 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
 
                   {/* AI Preliminary Scoring (if available) */}
                   {q.ai_score !== null && q.ai_score !== undefined && (
-                    <div className="p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl text-xs flex items-center justify-between text-indigo-900">
+                    <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl text-xs flex items-center justify-between text-purple-200">
                       <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-indigo-600" />
+                        <Sparkles className="w-4 h-4 text-purple-400" />
                         <span>AI Preliminary Suggested Score:</span>
                       </div>
                       <span className="font-bold">{q.ai_score} / {q.marks} Marks</span>
@@ -491,16 +489,16 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
 
                   {/* Manual Grading Inputs for Subjective Questions */}
                   {isSubjective ? (
-                    <div className="bg-indigo-50/30 border border-indigo-100 p-4 rounded-xl space-y-3">
+                    <div className="bg-[#0B132B] border border-slate-800 p-4 rounded-xl space-y-3">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                           <label
                             htmlFor={`score-${q.question_id}`}
-                            className="block text-xs font-bold text-slate-800 uppercase tracking-wider"
+                            className="block text-xs font-bold text-slate-200 uppercase tracking-wider"
                           >
-                            Marks Awarded:
+                            {t("examiner.awardedMarks")}:
                           </label>
-                          <p className="text-[11px] text-slate-500">Enter marks awarded based on answer rubric (0 to {q.marks}).</p>
+                          <p className="text-[11px] text-slate-400">Enter marks awarded based on answer rubric (0 to {q.marks}).</p>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -512,33 +510,33 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
                             max={q.marks}
                             value={currentEval.marks}
                             onChange={(e) => handleScoreChange(q.question_id, q.marks, e.target.value)}
-                            className="w-24 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-indigo-700 text-center focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                            className="w-24 px-3 py-2 bg-[#131D33] border border-slate-700 rounded-xl text-sm font-bold text-teal-300 text-center focus:border-teal-500 focus:outline-none"
                           />
-                          <span className="text-xs font-semibold text-slate-500">/ {q.marks} pts</span>
+                          <span className="text-xs font-semibold text-slate-400">/ {q.marks} pts</span>
                         </div>
                       </div>
 
                       <div>
                         <label
                           htmlFor={`feedback-${q.question_id}`}
-                          className="block text-xs font-semibold text-slate-700 mb-1"
+                          className="block text-xs font-semibold text-slate-300 mb-1"
                         >
-                          Examiner Feedback:
+                          {t("evaluation.examinerFeedback")}:
                         </label>
                         <textarea
                           id={`feedback-${q.question_id}`}
                           rows={2}
                           value={currentEval.feedback}
                           onChange={(e) => handleFeedbackChange(q.question_id, e.target.value)}
-                          placeholder="Provide constructive feedback or marks justification for this question..."
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-y"
+                          placeholder="Provide constructive feedback or marks justification..."
+                          className="w-full px-3 py-2 bg-[#131D33] border border-slate-700 rounded-xl text-xs text-slate-100 focus:border-teal-500 focus:outline-none resize-y"
                         />
                       </div>
                     </div>
                   ) : (
-                    <div className="text-xs text-slate-500 flex items-center justify-between pt-1">
+                    <div className="text-xs text-slate-400 flex items-center justify-between pt-1">
                       <span>Objective question scored automatically.</span>
-                      <span className="font-bold text-slate-700">Auto Score: {q.auto_score ?? 0} / {q.marks}</span>
+                      <span className="font-bold text-slate-200">Auto Score: {q.auto_score ?? 0} / {q.marks}</span>
                     </div>
                   )}
                 </div>
@@ -548,7 +546,7 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
         )}
 
         {/* Action Controls Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4 sticky bottom-4 z-10">
+        <div className="bg-[#131D33] rounded-2xl border border-slate-800 p-6 shadow-sm space-y-4 sticky bottom-4 z-10">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <input
@@ -556,10 +554,10 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
                 type="checkbox"
                 checked={publishResult}
                 onChange={(e) => setPublishResult(e.target.checked)}
-                className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                className="w-4 h-4 text-teal-500 rounded border-slate-700 focus:ring-teal-500 cursor-pointer"
               />
-              <label htmlFor="publishResult" className="text-xs font-semibold text-slate-800 cursor-pointer">
-                Publish result immediately (candidate will immediately be able to view their final score & solutions)
+              <label htmlFor="publishResult" className="text-xs font-semibold text-slate-200 cursor-pointer">
+                Publish result immediately (candidate will be able to view their final score)
               </label>
             </div>
 
@@ -567,17 +565,17 @@ export default function ExaminerEvaluationDetailPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={() => router.push("/examiner/results")}
-                className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 border border-slate-700 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 rounded-xl text-xs font-bold shadow-md transition-colors disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                {saving ? "Finalizing Evaluation..." : "Finalize Evaluation"}
+                {saving ? t("evaluation.savingEvaluation") : t("evaluation.finalizeEvaluation")}
               </button>
             </div>
           </div>

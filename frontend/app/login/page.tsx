@@ -126,20 +126,20 @@ function LoginFormInner() {
     if (selectedRole === "admin") {
       return {
         label: t("common.adminPortal"),
-        color: "bg-purple-100 text-purple-800 border-purple-300",
+        color: "bg-indigo-500/10 text-indigo-300 border-indigo-500/30",
         icon: Shield,
       };
     }
     if (selectedRole === "examiner") {
       return {
         label: t("common.examinerPortal"),
-        color: "bg-indigo-100 text-indigo-800 border-indigo-300",
+        color: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30",
         icon: UserCheck,
       };
     }
     return {
       label: t("common.studentPortal"),
-      color: "bg-sky-100 text-sky-800 border-sky-300",
+      color: "bg-teal-500/10 text-teal-300 border-teal-500/30",
       icon: GraduationCap,
     };
   };
@@ -152,23 +152,23 @@ function LoginFormInner() {
       {/* Selected Role Indicator Badge */}
       <div className="mb-4 flex justify-center">
         <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
+          className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold border ${badge.color}`}
         >
           <BadgeIcon className="w-3.5 h-3.5" />
           {badge.label}
         </span>
       </div>
 
-      <div className="bg-white py-8 px-6 shadow-sm rounded-2xl border border-slate-200 sm:px-10">
+      <div className="bg-[#131D33] py-8 px-6 shadow-xl rounded-2xl border border-slate-800 sm:px-10">
         {/* Role selector tabs */}
-        <div className="mb-6 grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl text-xs font-medium">
+        <div className="mb-6 grid grid-cols-3 gap-1 bg-[#0B132B] p-1 rounded-xl text-xs font-medium border border-slate-800">
           <button
             type="button"
             onClick={() => setSelectedRole("student")}
-            className={`py-1.5 rounded-lg transition-all ${
+            className={`py-2 rounded-lg transition-all ${
               selectedRole === "student"
-                ? "bg-white text-slate-900 shadow-sm font-semibold"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-teal-500 text-slate-950 font-bold shadow-sm"
+                : "text-slate-400 hover:text-slate-200"
             }`}
           >
             {t("auth.student")}
@@ -176,10 +176,10 @@ function LoginFormInner() {
           <button
             type="button"
             onClick={() => setSelectedRole("examiner")}
-            className={`py-1.5 rounded-lg transition-all ${
+            className={`py-2 rounded-lg transition-all ${
               selectedRole === "examiner"
-                ? "bg-white text-slate-900 shadow-sm font-semibold"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-teal-500 text-slate-950 font-bold shadow-sm"
+                : "text-slate-400 hover:text-slate-200"
             }`}
           >
             {t("auth.examiner")}
@@ -187,10 +187,10 @@ function LoginFormInner() {
           <button
             type="button"
             onClick={() => setSelectedRole("admin")}
-            className={`py-1.5 rounded-lg transition-all ${
+            className={`py-2 rounded-lg transition-all ${
               selectedRole === "admin"
-                ? "bg-white text-slate-900 shadow-sm font-semibold"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-teal-500 text-slate-950 font-bold shadow-sm"
+                : "text-slate-400 hover:text-slate-200"
             }`}
           >
             {t("auth.admin")}
@@ -199,23 +199,23 @@ function LoginFormInner() {
 
         {/* Session Expired / Status Notice */}
         {notice && (
-          <div className="mb-5 p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2.5 text-amber-800 text-xs">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
+          <div className="mb-5 p-3.5 rounded-xl bg-amber-950/40 border border-amber-800/80 flex items-start gap-2.5 text-amber-300 text-xs">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-400" />
             <span>{notice}</span>
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div className="mb-5 p-3.5 rounded-lg bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-xs">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-500" />
+          <div className="mb-5 p-3.5 rounded-xl bg-rose-950/40 border border-rose-800/80 flex items-start gap-2.5 text-rose-300 text-xs">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-400" />
             <span>{error}</span>
           </div>
         )}
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-slate-300 mb-1">
               {t("auth.emailAddress")}
             </label>
             <input
@@ -231,12 +231,12 @@ function LoginFormInner() {
                   ? "examiner@example.com"
                   : "student@example.com"
               }
-              className="block w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+              className="block w-full px-3.5 py-2.5 bg-[#0B132B] border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-teal-500 placeholder-slate-500 shadow-sm"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-slate-300 mb-1">
               {t("auth.password")}
             </label>
             <input
@@ -246,18 +246,18 @@ function LoginFormInner() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="block w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+              className="block w-full px-3.5 py-2.5 bg-[#0B132B] border border-slate-700 rounded-xl text-slate-100 text-sm focus:outline-none focus:border-teal-500 placeholder-slate-500 shadow-sm"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors mt-2"
+            className="w-full flex justify-center items-center gap-2 py-2.5 px-4 rounded-xl shadow-sm text-sm font-bold text-slate-950 bg-teal-500 hover:bg-teal-400 focus:outline-none disabled:opacity-50 transition-colors mt-2"
           >
             {loading ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
                 <span>{t("auth.authenticating")}</span>
               </>
             ) : (
@@ -278,29 +278,29 @@ function LoginFormInner() {
         </form>
 
         {/* Registration Link */}
-        <div className="mt-4 text-center text-xs text-slate-600">
+        <div className="mt-4 text-center text-xs text-slate-400">
           {t("auth.noAccount")}{" "}
           <Link
             href={`/register?role=${selectedRole === "examiner" ? "examiner" : "student"}`}
-            className="font-semibold text-indigo-600 hover:text-indigo-700 underline"
+            className="font-semibold text-teal-400 hover:text-teal-300 underline"
           >
             {t("auth.createOne")}
           </Link>
         </div>
 
         {/* Demo Quick Fill Section */}
-        <div className="mt-6 pt-5 border-t border-slate-100">
-          <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-2.5 text-center">
+        <div className="mt-6 pt-5 border-t border-slate-800">
+          <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-2.5 text-center">
             {t("auth.demoCredentials")}
           </p>
           <div className="grid grid-cols-3 gap-1.5">
             <button
               type="button"
               onClick={() => fillCredentials("student")}
-              className={`py-2 px-1.5 border rounded-lg text-[11px] font-medium text-center transition-all ${
+              className={`py-2 px-1.5 border rounded-xl text-[11px] font-medium text-center transition-all ${
                 selectedRole === "student" && email === "student@example.com"
-                  ? "bg-sky-50 border-sky-300 text-sky-800 font-semibold"
-                  : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                  ? "bg-teal-500/10 border-teal-500/40 text-teal-300 font-bold"
+                  : "border-slate-800 bg-[#0B132B] text-slate-300 hover:bg-slate-800/60"
               }`}
             >
               {t("auth.student")}
@@ -308,10 +308,10 @@ function LoginFormInner() {
             <button
               type="button"
               onClick={() => fillCredentials("examiner")}
-              className={`py-2 px-1.5 border rounded-lg text-[11px] font-medium text-center transition-all ${
+              className={`py-2 px-1.5 border rounded-xl text-[11px] font-medium text-center transition-all ${
                 selectedRole === "examiner" && email === "examiner@example.com"
-                  ? "bg-indigo-50 border-indigo-300 text-indigo-800 font-semibold"
-                  : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                  ? "bg-cyan-500/10 border-cyan-500/40 text-cyan-300 font-bold"
+                  : "border-slate-800 bg-[#0B132B] text-slate-300 hover:bg-slate-800/60"
               }`}
             >
               {t("auth.examiner")}
@@ -319,17 +319,17 @@ function LoginFormInner() {
             <button
               type="button"
               onClick={() => fillCredentials("admin")}
-              className={`py-2 px-1.5 border rounded-lg text-[11px] font-medium text-center transition-all ${
+              className={`py-2 px-1.5 border rounded-xl text-[11px] font-medium text-center transition-all ${
                 selectedRole === "admin" && email === "admin@example.com"
-                  ? "bg-purple-50 border-purple-300 text-purple-800 font-semibold"
-                  : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                  ? "bg-indigo-500/10 border-indigo-500/40 text-indigo-300 font-bold"
+                  : "border-slate-800 bg-[#0B132B] text-slate-300 hover:bg-slate-800/60"
               }`}
             >
               {t("auth.admin")}
             </button>
           </div>
           <div className="mt-3 text-[11px] text-slate-400 text-center">
-            Student: <span className="font-mono text-slate-600">Student@123</span> &bull; Examiner: <span className="font-mono text-slate-600">Examiner@123</span> &bull; Admin: <span className="font-mono text-slate-600">Admin@123</span>
+            Student: <span className="font-mono text-teal-300">Student@123</span> &bull; Examiner: <span className="font-mono text-cyan-300">Examiner@123</span> &bull; Admin: <span className="font-mono text-indigo-300">Admin@123</span>
           </div>
         </div>
       </div>
@@ -341,12 +341,12 @@ export default function LoginPage() {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#0B132B] text-slate-100 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
       {/* Top back button and language selector */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md mb-6 flex items-center justify-between">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-teal-300 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           {t("common.backToHome")}
@@ -355,13 +355,13 @@ export default function LoginPage() {
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex items-center justify-center p-3.5 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/20 mb-4 text-white">
+        <div className="inline-flex items-center justify-center p-3.5 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded-2xl shadow-lg mb-4">
           <ShieldCheck className="w-8 h-8" />
         </div>
-        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h2 className="text-3xl font-extrabold text-slate-100 tracking-tight">
           {t("auth.signInTitle")}
         </h2>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-slate-400">
           {t("auth.signInSubtitle")}
         </p>
       </div>
@@ -369,9 +369,9 @@ export default function LoginPage() {
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
         <Suspense
           fallback={
-            <div className="bg-white py-12 px-6 shadow-sm rounded-2xl border border-slate-200 text-center">
-              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-              <p className="text-xs text-slate-500 font-medium">{t("common.loading")}</p>
+            <div className="bg-[#131D33] py-12 px-6 shadow-sm rounded-2xl border border-slate-800 text-center">
+              <div className="w-8 h-8 border-4 border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+              <p className="text-xs text-slate-400 font-medium">{t("common.loading")}</p>
             </div>
           }
         >

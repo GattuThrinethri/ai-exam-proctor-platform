@@ -16,8 +16,10 @@ import {
   UserCheck,
 } from "lucide-react";
 import { examinerApi, examsApi, ExaminerResult, Exam } from "../../../services/api";
+import { useLanguage } from "../../../i18n";
 
 export default function ExaminerResultsPage() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const initialExamId = searchParams.get("exam_id") ? parseInt(searchParams.get("exam_id")!, 10) : undefined;
 
@@ -65,27 +67,27 @@ export default function ExaminerResultsPage() {
   const getSuspicionPill = (score: number) => {
     if (score === 0) {
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-300 rounded-full border border-emerald-500/20">
           Nominal (0)
         </span>
       );
     }
     if (score < 25) {
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-teal-500/10 text-teal-300 rounded-full border border-teal-500/20">
           Low ({score})
         </span>
       );
     }
     if (score < 50) {
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-700 rounded-full border border-amber-200">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-500/10 text-amber-300 rounded-full border border-amber-500/20">
           Medium ({score})
         </span>
       );
     }
     return (
-      <span className="px-2 py-0.5 text-[10px] font-semibold bg-rose-50 text-rose-700 rounded-full border border-rose-200 font-bold">
+      <span className="px-2 py-0.5 text-[10px] font-semibold bg-rose-500/10 text-rose-300 rounded-full border border-rose-500/20 font-bold">
         Elevated ({score})
       </span>
     );
@@ -96,54 +98,70 @@ export default function ExaminerResultsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Candidate Results</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Read-only evaluation outcomes, objective scoring, AI grading breakdowns, and suspicion ratings.
+          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">{t("nav.examResults")}</h1>
+          <p className="text-sm text-slate-400 mt-1">
+            {t("examiner.subtitle")}
           </p>
         </div>
         <button
           onClick={fetchResults}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-colors self-start sm:self-auto"
+          className="p-2 text-slate-300 hover:text-white bg-[#131D33] border border-slate-800 rounded-xl hover:bg-slate-800 transition-colors shadow-sm self-start sm:self-auto"
+          title={t("common.refresh")}
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-          <span>Refresh Results</span>
+          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
         </button>
       </div>
 
-      {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center gap-3">
-        <form onSubmit={handleSearchSubmit} className="relative flex-1 w-full">
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search candidate name or email..."
-            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-          />
+      {/* Filter and Search Bar */}
+      <div className="bg-[#131D33] p-4 rounded-xl border border-slate-800 shadow-sm space-y-3">
+        <form onSubmit={handleSearchSubmit} className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={t("common.search")}
+              className="w-full pl-9 pr-4 py-2 bg-[#0B132B] border border-slate-700 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:border-teal-500 focus:outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-teal-500 text-slate-950 text-xs font-semibold rounded-xl hover:bg-teal-400"
+          >
+            {t("common.search")}
+          </button>
         </form>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="w-4 h-4 text-slate-400 flex-shrink-0" />
+        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+            <Filter className="w-3.5 h-3.5" />
+            <span>{t("common.filter")}:</span>
+          </div>
+
           <select
             value={selectedExamId || ""}
             onChange={(e) => setSelectedExamId(e.target.value ? parseInt(e.target.value, 10) : undefined)}
-            className="w-full sm:w-64 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none"
+            className="px-2.5 py-1.5 bg-[#0B132B] border border-slate-700 rounded-lg text-xs text-slate-200 focus:border-teal-500 focus:outline-none max-w-xs"
           >
-            <option value="">All Examinations</option>
+            <option value="">{t("examiner.totalExams")}</option>
             {exams.map((ex) => (
               <option key={ex.id} value={ex.id}>
                 {ex.title} ({ex.subject})
               </option>
             ))}
           </select>
-          {selectedExamId && (
+
+          {(selectedExamId || searchTerm) && (
             <button
-              onClick={() => setSelectedExamId(undefined)}
-              className="text-xs text-slate-500 hover:text-slate-800"
+              onClick={() => {
+                setSelectedExamId(undefined);
+                setSearchTerm("");
+              }}
+              className="text-xs text-teal-400 hover:text-teal-300 font-medium ml-auto"
             >
-              Clear
+              {t("common.clear")}
             </button>
           )}
         </div>
@@ -151,103 +169,80 @@ export default function ExaminerResultsPage() {
 
       {/* Error state */}
       {error && (
-        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-3 text-rose-700 text-sm">
-          <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-500" />
+        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-800/80 flex items-center gap-3 text-rose-300 text-sm">
+          <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-400" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Results Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-[#131D33] rounded-xl border border-slate-800 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-slate-400 text-sm">Loading exam results...</div>
+          <div className="p-12 text-center text-slate-400 text-sm">{t("common.loading")}</div>
         ) : results.length === 0 ? (
           <div className="p-12 text-center">
-            <Award className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-slate-700">No candidate results found</p>
+            <Award className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+            <p className="text-sm font-semibold text-slate-300">No candidate results found</p>
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              Candidate answers will automatically be evaluated and populated here as submissions occur.
+              No exam sessions match your filter or no student submissions have been recorded yet.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                  <th className="py-3.5 px-4">Candidate</th>
-                  <th className="py-3.5 px-4">Examination</th>
-                  <th className="py-3.5 px-4">Objective Score</th>
-                  <th className="py-3.5 px-4">Subjective Score</th>
-                  <th className="py-3.5 px-4">Total Score</th>
-                  <th className="py-3.5 px-4">Suspicion Score</th>
-                  <th className="py-3.5 px-4">Evaluation Status</th>
-                  <th className="py-3.5 px-4 text-right">Submitted At</th>
-                  <th className="py-3.5 px-4 text-right">Action</th>
+                <tr className="border-b border-slate-800 bg-[#0B132B] text-slate-300 font-semibold uppercase tracking-wider text-[11px]">
+                  <th className="py-3.5 px-4">{t("examiner.candidateName")}</th>
+                  <th className="py-3.5 px-4">{t("examiner.examTitle")}</th>
+                  <th className="py-3.5 px-4">{t("examiner.submittedAt")}</th>
+                  <th className="py-3.5 px-4">{t("student.score")}</th>
+                  <th className="py-3.5 px-4">{t("student.proctoring")}</th>
+                  <th className="py-3.5 px-4">{t("examiner.evaluationStatus")}</th>
+                  <th className="py-3.5 px-4 text-right">{t("common.actions")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-800">
+              <tbody className="divide-y divide-slate-800/80 text-slate-300">
                 {results.map((res) => (
-                  <tr key={res.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4">
-                      <p className="font-bold text-slate-900">{res.student_name}</p>
-                      <p className="text-[11px] text-slate-400">{res.student_email}</p>
+                  <tr key={res.id} className="hover:bg-slate-800/40 transition-colors">
+                    <td className="py-3 px-4 font-semibold text-slate-100 whitespace-nowrap">
+                      {res.student_name}
+                      <span className="block text-[11px] text-slate-400 font-normal">{res.student_email}</span>
                     </td>
                     <td className="py-3 px-4">
-                      <p className="font-medium text-slate-800">{res.exam_title}</p>
+                      <p className="font-medium text-slate-200">{res.exam_title}</p>
+                      <span className="text-[11px] text-teal-400">{res.subject || "General"}</span>
                     </td>
-                    <td className="py-3 px-4 whitespace-nowrap font-semibold text-slate-700">
-                      {res.objective_score.toFixed(2)}
+                    <td className="py-3 px-4 whitespace-nowrap text-slate-400">
+                      {new Date(res.submitted_at || res.generated_at).toLocaleString()}
                     </td>
-                    <td className="py-3 px-4 whitespace-nowrap font-semibold text-slate-700">
-                      {res.subjective_score.toFixed(2)}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <span className="px-2.5 py-1 text-xs font-black bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100">
-                        {res.total_score.toFixed(2)} pts
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      {getSuspicionPill(res.suspicion_score)}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      {!res.published ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-50 text-amber-800 border border-amber-300">
-                          <Clock className="w-3 h-3 text-amber-600" /> Pending Evaluation
-                        </span>
+                    <td className="py-3 px-4 whitespace-nowrap font-bold text-slate-100">
+                      {res.published && res.total_score !== null ? (
+                        <>
+                          {res.total_score} {res.max_score ? <span className="text-[11px] font-normal text-slate-400">/ {res.max_score} ({res.percentage ?? 0}%)</span> : null}
+                        </>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Published
-                        </span>
+                        <span className="text-xs text-amber-300 font-medium">{t("common.evaluationPending")}</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-right whitespace-nowrap text-slate-500 text-[11px]">
-                      {res.submitted_at
-                        ? new Date(res.submitted_at).toLocaleString([], {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : "Auto-evaluated"}
+                    <td className="py-3 px-4 whitespace-nowrap">{getSuspicionPill(res.suspicion_score)}</td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      {res.published ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                          <CheckCircle2 className="w-3 h-3" /> {t("examiner.evaluatedStatus")}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                          <Clock className="w-3 h-3" /> {t("examiner.pendingReview")}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-right whitespace-nowrap">
                       <Link
                         href={`/examiner/results/${res.session_id}`}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                          !res.published
-                            ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
-                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                        }`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-teal-500/10 text-teal-300 font-semibold text-xs border border-teal-500/20 rounded-xl hover:bg-teal-500/20 transition-colors"
                       >
-                        {!res.published ? (
-                          <>
-                            <UserCheck className="w-3.5 h-3.5" /> Evaluate
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="w-3.5 h-3.5" /> Review Marks
-                          </>
-                        )}
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>{t("examiner.evaluate")}</span>
                       </Link>
                     </td>
                   </tr>

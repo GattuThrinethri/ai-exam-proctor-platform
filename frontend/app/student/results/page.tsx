@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Award, AlertCircle, TrendingUp, Calendar, CheckCircle2 } from "lucide-react";
 import { studentApi, StudentResultSummary } from "@/services/api";
+import { useLanguage } from "@/i18n";
 
 export default function StudentResultsPage() {
+  const { t } = useLanguage();
   const [results, setResults] = useState<StudentResultSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,97 +32,97 @@ export default function StudentResultsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">My Examination Results</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Review your scored examinations, authoritative percentile rankings, and performance breakdowns.
+        <h1 className="text-2xl font-bold text-slate-100 tracking-tight">{t("student.myResults")}</h1>
+        <p className="text-sm text-slate-400 mt-1">
+          {t("student.subtitle")}
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3">
+        <div className="bg-rose-950/40 border border-rose-800/80 text-rose-300 px-4 py-3 rounded-xl flex items-center gap-3">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <p className="text-sm">{error}</p>
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-[#131D33] rounded-2xl border border-slate-800 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-slate-400 text-sm">Loading examination results...</div>
+          <div className="p-12 text-center text-slate-400 text-sm">{t("common.loading")}</div>
         ) : results.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 text-sm">
-            You have not completed any examinations yet.
+          <div className="p-12 text-center text-slate-400 text-sm">
+            {t("student.noResults")}
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+            <table className="w-full text-left text-sm text-slate-300">
+              <thead className="bg-[#0B132B] text-slate-300 text-xs uppercase font-semibold border-b border-slate-800">
                 <tr>
-                  <th className="px-6 py-3.5">Exam Title</th>
-                  <th className="px-6 py-3.5">Subject</th>
-                  <th className="px-6 py-3.5">Date Taken</th>
-                  <th className="px-6 py-3.5">Total Score</th>
-                  <th className="px-6 py-3.5">Percentage</th>
-                  <th className="px-6 py-3.5">Percentile Rank</th>
-                  <th className="px-6 py-3.5">Review Status</th>
-                  <th className="px-6 py-3.5 text-right">Action</th>
+                  <th className="px-6 py-3.5">{t("examiner.examTitle")}</th>
+                  <th className="px-6 py-3.5">{t("examiner.subject")}</th>
+                  <th className="px-6 py-3.5">{t("examiner.submittedAt")}</th>
+                  <th className="px-6 py-3.5">{t("student.score")}</th>
+                  <th className="px-6 py-3.5">{t("student.percentage")}</th>
+                  <th className="px-6 py-3.5">{t("student.percentileRank")}</th>
+                  <th className="px-6 py-3.5">{t("common.status")}</th>
+                  <th className="px-6 py-3.5 text-right">{t("common.actions")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-800/80">
                 {results.map((res) => {
                   const subDate = res.submitted_at ? new Date(res.submitted_at).toLocaleDateString() : "-";
                   return (
-                    <tr key={res.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="px-6 py-4 font-bold text-slate-900">{res.exam_title}</td>
+                    <tr key={res.id} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="px-6 py-4 font-bold text-slate-100">{res.exam_title}</td>
                       <td className="px-6 py-4">
-                        <span className="px-2.5 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700">
+                        <span className="px-2.5 py-0.5 rounded text-xs font-semibold bg-teal-500/10 text-teal-300 border border-teal-500/20">
                           {res.subject}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-xs text-slate-500">{subDate}</td>
-                      <td className="px-6 py-4 font-bold text-slate-900">
+                      <td className="px-6 py-4 text-xs text-slate-400">{subDate}</td>
+                      <td className="px-6 py-4 font-bold text-slate-100">
                         {res.published && res.total_score !== null ? (
                           <>
                             {res.total_score} <span className="text-xs font-normal text-slate-400">/ {res.max_score}</span>
                           </>
                         ) : (
-                          <span className="inline-flex items-center text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                            Evaluation Pending
+                          <span className="inline-flex items-center text-xs font-medium text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                            {t("common.evaluationPending")}
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         {res.published && res.percentage !== null ? (
-                          <span className="font-semibold text-indigo-600">{res.percentage}%</span>
+                          <span className="font-semibold text-teal-400">{res.percentage}%</span>
                         ) : (
-                          <span className="text-xs text-slate-400 italic">Pending</span>
+                          <span className="text-xs text-slate-500 italic">{t("common.pending")}</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         {res.published && res.percentile !== null ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                            Percentile rank: {res.percentile}%
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                            {t("student.percentileRank")}: {res.percentile}%
                           </span>
                         ) : (
-                          <span className="text-xs text-slate-400 italic">Pending</span>
+                          <span className="text-xs text-slate-500 italic">{t("common.pending")}</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         {res.published ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Published
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> {t("common.completed")}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                            Evaluation Pending
+                          <span className="inline-flex items-center text-xs font-medium text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                            {t("common.evaluationPending")}
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <Link
                           href={`/student/results/${res.session_id}`}
-                          className="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 font-semibold text-xs hover:bg-indigo-100 transition-colors"
+                          className="inline-flex items-center px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-300 font-semibold text-xs border border-teal-500/20 hover:bg-teal-500/20 transition-colors"
                         >
-                          {res.published ? "View Analysis →" : "View Status →"}
+                          {res.published ? `${t("student.viewAnalysis")} →` : `${t("common.details")} →`}
                         </Link>
                       </td>
                     </tr>

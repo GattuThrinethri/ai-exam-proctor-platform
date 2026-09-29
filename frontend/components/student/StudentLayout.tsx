@@ -50,10 +50,10 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-[#f4f6fb] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0b132b] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm font-medium text-slate-500">
+          <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-slate-400">
             {t("student.verifyingCredentials")}
           </p>
         </div>
@@ -68,7 +68,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f6fb] flex flex-col">
+    <div className="min-h-screen bg-[#0b132b] text-slate-100 flex flex-col">
       {/* Unified Top Header */}
       <AppHeader role="student" navItems={navItems} user={user} />
 
@@ -78,9 +78,10 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+      <footer className="bg-[#0f172a] border-t border-[#1e2d4a] py-4 text-center text-xs text-slate-400">
         {t("common.platformTitle")} &bull; {t("student.proctoring")}
       </footer>
     </div>
   );
 }
+

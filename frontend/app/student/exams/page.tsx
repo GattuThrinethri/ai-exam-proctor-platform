@@ -12,9 +12,11 @@ import {
 } from "lucide-react";
 import { studentApi, Exam } from "@/services/api";
 import ExamInstructionsModal from "@/components/student/ExamInstructionsModal";
+import { useLanguage } from "@/i18n";
 
 export default function StudentExamsPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,22 +85,22 @@ export default function StudentExamsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Available Examinations</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Browse scheduled test windows and enter live examinations with automated proctoring.
+        <h1 className="text-2xl font-bold text-slate-100 tracking-tight">{t("student.availableExams")}</h1>
+        <p className="text-sm text-slate-400 mt-1">
+          {t("student.subtitle")}
         </p>
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="bg-[#131D33] p-4 rounded-2xl border border-slate-800 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by exam title or subject..."
-            className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder={t("common.search")}
+            className="w-full pl-10 pr-4 py-2 text-sm bg-[#0B132B] border border-slate-700 text-slate-100 rounded-xl focus:outline-none focus:border-teal-500 placeholder-slate-500"
           />
         </div>
 
@@ -107,46 +109,46 @@ export default function StudentExamsPage() {
           <select
             value={subjectFilter}
             onChange={(e) => setSubjectFilter(e.target.value)}
-            className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 text-sm bg-[#0B132B] border border-slate-700 text-slate-200 rounded-xl focus:outline-none focus:border-teal-500"
           >
-            <option value="">All Subjects</option>
+            <option value="">{t("examiner.allSubjects")}</option>
             {subjects.map((sub) => (
               <option key={sub} value={sub}>{sub}</option>
             ))}
           </select>
 
           {/* Status Tabs */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-semibold text-slate-600">
+          <div className="flex items-center bg-[#0B132B] p-1 rounded-xl text-xs font-semibold text-slate-400 border border-slate-800">
             <button
               onClick={() => setStatusFilter("all")}
-              className={`px-3 py-1.5 rounded-lg transition-colors ${statusFilter === "all" ? "bg-white text-indigo-600 shadow-sm" : "hover:text-slate-900"}`}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${statusFilter === "all" ? "bg-teal-500 text-slate-950 shadow-sm" : "hover:text-slate-100"}`}
             >
-              All
+              {t("common.all")}
             </button>
             <button
               onClick={() => setStatusFilter("active")}
-              className={`px-3 py-1.5 rounded-lg transition-colors ${statusFilter === "active" ? "bg-white text-indigo-600 shadow-sm" : "hover:text-slate-900"}`}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${statusFilter === "active" ? "bg-teal-500 text-slate-950 shadow-sm" : "hover:text-slate-100"}`}
             >
-              Active
+              {t("common.active")}
             </button>
             <button
               onClick={() => setStatusFilter("upcoming")}
-              className={`px-3 py-1.5 rounded-lg transition-colors ${statusFilter === "upcoming" ? "bg-white text-indigo-600 shadow-sm" : "hover:text-slate-900"}`}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${statusFilter === "upcoming" ? "bg-teal-500 text-slate-950 shadow-sm" : "hover:text-slate-100"}`}
             >
-              Upcoming
+              {t("student.upcoming")}
             </button>
             <button
               onClick={() => setStatusFilter("closed")}
-              className={`px-3 py-1.5 rounded-lg transition-colors ${statusFilter === "closed" ? "bg-white text-indigo-600 shadow-sm" : "hover:text-slate-900"}`}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${statusFilter === "closed" ? "bg-teal-500 text-slate-950 shadow-sm" : "hover:text-slate-100"}`}
             >
-              Closed
+              {t("student.closed")}
             </button>
           </div>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3">
+        <div className="bg-rose-950/40 border border-rose-800/80 text-rose-300 px-4 py-3 rounded-xl flex items-center gap-3">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <p className="text-sm">{error}</p>
         </div>
@@ -154,10 +156,10 @@ export default function StudentExamsPage() {
 
       {/* Exam Cards Grid */}
       {loading ? (
-        <div className="p-12 text-center text-slate-400 text-sm">Loading examinations...</div>
+        <div className="p-12 text-center text-slate-400 text-sm">{t("common.loading")}</div>
       ) : filteredExams.length === 0 ? (
-        <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center text-slate-500 text-sm shadow-sm">
-          No examinations match your current filters.
+        <div className="bg-[#131D33] p-12 rounded-2xl border border-slate-800 text-center text-slate-400 text-sm shadow-sm">
+          {t("student.noExams")}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -171,78 +173,78 @@ export default function StudentExamsPage() {
             return (
               <div
                 key={exam.id}
-                className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+                className="bg-[#131D33] rounded-2xl border border-slate-800 p-6 shadow-sm hover:border-slate-700 transition-all flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-500/10 text-teal-300 border border-teal-500/20">
                       {exam.subject}
                     </span>
                     {isActive && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Open Now
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> {t("student.openNow")}
                       </span>
                     )}
                     {isUpcoming && (
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                        Upcoming
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        {t("student.upcoming")}
                       </span>
                     )}
                     {isClosed && (
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600">
-                        Closed
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">
+                        {t("student.closed")}
                       </span>
                     )}
                   </div>
 
-                  <h3 className="text-lg font-bold text-slate-900 leading-snug">{exam.title}</h3>
+                  <h3 className="text-lg font-bold text-slate-100 leading-snug">{exam.title}</h3>
                   {exam.description && (
-                    <p className="text-xs text-slate-500 line-clamp-2">{exam.description}</p>
+                    <p className="text-xs text-slate-400 line-clamp-2">{exam.description}</p>
                   )}
 
-                  <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                  <div className="pt-2 border-t border-slate-800 grid grid-cols-2 gap-2 text-xs text-slate-300">
                     <div>
-                      <span className="text-slate-400 block">Duration</span>
-                      <span className="font-semibold text-slate-800">{exam.duration} Minutes</span>
+                      <span className="text-slate-400 block">{t("student.duration")}</span>
+                      <span className="font-semibold text-slate-200">{exam.duration} {t("student.minutes")}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block">Questions</span>
-                      <span className="font-semibold text-slate-800">{exam.question_count} Questions</span>
+                      <span className="text-slate-400 block">{t("student.questions")}</span>
+                      <span className="font-semibold text-slate-200">{exam.question_count} {t("student.questions")}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block">Proctoring</span>
-                      <span className="font-semibold text-slate-800">
-                        {exam.proctoring_enabled ? "AI Enabled" : "Disabled"}
+                      <span className="text-slate-400 block">{t("student.proctoring")}</span>
+                      <span className="font-semibold text-teal-400">
+                        {exam.proctoring_enabled ? t("student.aiActive") : t("student.disabled")}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block">Negative Marks</span>
-                      <span className="font-semibold text-slate-800">
-                        {exam.negative_marking_enabled ? "Yes" : "No"}
+                      <span className="text-slate-400 block">{t("instructions.negativePenalty")}</span>
+                      <span className="font-semibold text-slate-200">
+                        {exam.negative_marking_enabled ? t("common.yes") : t("common.no")}
                       </span>
                     </div>
                   </div>
 
-                  <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-100">
-                    Window: {s.toLocaleDateString()} {s.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} &ndash; {e.toLocaleDateString()} {e.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-800/80">
+                    {s.toLocaleDateString()} {s.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} &ndash; {e.toLocaleDateString()} {e.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                   </div>
                 </div>
 
-                <div className="pt-5 mt-4 border-t border-slate-100">
+                <div className="pt-5 mt-4 border-t border-slate-800">
                   {isActive ? (
                     <button
                       onClick={() => handleOpenInstructions(exam)}
-                      className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm flex items-center justify-center gap-2"
+                      className="w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-bold text-sm hover:bg-teal-400 transition-colors shadow-sm flex items-center justify-center gap-2"
                     >
-                      Enter Examination <ArrowRight className="w-4 h-4" />
+                      {t("student.enterExam")} <ArrowRight className="w-4 h-4" />
                     </button>
                   ) : isUpcoming ? (
-                    <div className="text-center py-2 text-xs font-semibold text-amber-600 bg-amber-50 rounded-xl">
-                      Examination has not opened yet
+                    <div className="text-center py-2 text-xs font-semibold text-amber-300 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                      {t("student.upcoming")}
                     </div>
                   ) : (
-                    <div className="text-center py-2 text-xs font-medium text-slate-400 bg-slate-50 rounded-xl">
-                      Exam Window Expired
+                    <div className="text-center py-2 text-xs font-medium text-slate-400 bg-slate-800/50 rounded-xl border border-slate-800">
+                      {t("student.closed")}
                     </div>
                   )}
                 </div>

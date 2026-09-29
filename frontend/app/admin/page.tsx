@@ -16,8 +16,10 @@ import {
   Server
 } from "lucide-react";
 import { adminApi, AdminPlatformStats } from "@/services/api";
+import { useLanguage } from "@/i18n";
 
 export default function AdminOverviewPage() {
+  const { t } = useLanguage();
   const [stats, setStats] = useState<AdminPlatformStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,8 +44,8 @@ export default function AdminOverviewPage() {
   if (loading) {
     return (
       <div className="py-20 text-center text-slate-400 text-sm">
-        <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-        Aggregating platform metrics and security indicators...
+        <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        {t("common.loading")}
       </div>
     );
   }
@@ -51,23 +53,23 @@ export default function AdminOverviewPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Platform Governance & Health</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            System-wide oversight across candidate participation, proctoring security, and institution accounts.
+          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">{t("admin.overview")}</h1>
+          <p className="text-sm text-slate-400 mt-1">
+            {t("admin.subtitle")}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Systems Operational
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Operational
           </span>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3">
+        <div className="bg-rose-950/40 border border-rose-800/80 text-rose-300 px-4 py-3 rounded-xl flex items-center gap-3">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <p className="text-sm">{error}</p>
         </div>
@@ -77,124 +79,99 @@ export default function AdminOverviewPage() {
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Total Users */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+          <div className="bg-[#131D33] p-6 rounded-2xl border border-slate-800 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center font-bold">
               <Users className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Users</p>
-              <p className="text-2xl font-extrabold text-slate-900">{stats.total_users}</p>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t("admin.totalUsers")}</p>
+              <p className="text-2xl font-extrabold text-slate-100">{stats.total_users}</p>
+              <p className="text-[11px] text-slate-400">
                 {stats.total_students} Students &bull; {stats.total_examiners} Examiners
               </p>
             </div>
           </div>
 
           {/* Active Exams */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+          <div className="bg-[#131D33] p-6 rounded-2xl border border-slate-800 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center font-bold">
               <FileSpreadsheet className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Exams Configured</p>
-              <p className="text-2xl font-extrabold text-slate-900">{stats.total_exams}</p>
-              <p className="text-[11px] text-indigo-600 font-medium">{stats.active_exams} Open Right Now</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t("admin.activeExams")}</p>
+              <p className="text-2xl font-extrabold text-slate-100">{stats.total_exams}</p>
+              <p className="text-[11px] text-teal-400 font-semibold">{stats.active_exams} Open Now</p>
             </div>
           </div>
 
-          {/* Completed Sessions */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-              <Activity className="w-6 h-6" />
+          {/* Pending Approvals */}
+          <div className="bg-[#131D33] p-6 rounded-2xl border border-slate-800 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-300 border border-amber-500/20 flex items-center justify-center font-bold">
+              <GraduationCap className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Exam Sessions</p>
-              <p className="text-2xl font-extrabold text-slate-900">{stats.total_sessions}</p>
-              <p className="text-[11px] text-emerald-600 font-medium">{stats.completed_sessions} Evaluated</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t("admin.pendingApprovals")}</p>
+              <p className="text-2xl font-extrabold text-slate-100">{stats.pending_examiner_approvals ?? 0}</p>
+              <Link href="/admin/pending-examiners" className="text-[11px] text-amber-300 font-medium hover:underline">
+                Review Clearance →
+              </Link>
             </div>
           </div>
 
-          {/* Flagged Proctoring */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-              <ShieldAlert className="w-6 h-6" />
+          {/* Question Bank */}
+          <div className="bg-[#131D33] p-6 rounded-2xl border border-slate-800 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-300 border border-purple-500/20 flex items-center justify-center font-bold">
+              <BookOpen className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Flagged Sessions</p>
-              <p className="text-2xl font-extrabold text-slate-900">{stats.flagged_sessions}</p>
-              <p className="text-[11px] text-slate-500">Suspicion score &ge; 20</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t("examiner.questionBank")}</p>
+              <p className="text-2xl font-extrabold text-slate-100">{stats.total_questions ?? stats.total_sessions}</p>
+              <p className="text-[11px] text-slate-400">Total Available Item Pool</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Governance Shortcuts & System Health */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* User Governance Quick Card */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <Users className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-900">User Account Management</h3>
-              <p className="text-xs text-slate-500">Manage student and examiner permissions</p>
-            </div>
+      {/* Control Actions Navigation */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Link
+          href="/admin/users"
+          className="bg-[#131D33] p-6 rounded-2xl border border-slate-800 shadow-sm hover:border-slate-700 transition-all space-y-3 group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center border border-teal-500/20">
+            <Users className="w-5 h-5" />
           </div>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Provision new user accounts, update security roles with automated last-admin protection, and toggle active status.
+          <h3 className="text-lg font-bold text-slate-100 group-hover:text-teal-400 transition-colors">{t("admin.userList")}</h3>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Provision roles, deactivate accounts, and audit user permissions.
           </p>
-          <Link
-            href="/admin/users"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
-          >
-            Manage Platform Users &rarr;
-          </Link>
-        </div>
+        </Link>
 
-        {/* Global Exam Oversight */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-              <FileSpreadsheet className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-900">Global Examination Oversight</h3>
-              <p className="text-xs text-slate-500">All examinations across examiners</p>
-            </div>
+        <Link
+          href="/admin/pending-examiners"
+          className="bg-[#131D33] p-6 rounded-2xl border border-slate-800 shadow-sm hover:border-slate-700 transition-all space-y-3 group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-300 flex items-center justify-center border border-amber-500/20">
+            <GraduationCap className="w-5 h-5" />
           </div>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Inspect all configured examination papers, candidate attendance metrics, proctoring settings, and administrative deletion controls.
+          <h3 className="text-lg font-bold text-slate-100 group-hover:text-amber-300 transition-colors">{t("admin.pendingExaminers")}</h3>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Approve or decline registered examiner accounts before dashboard access is cleared.
           </p>
-          <Link
-            href="/admin/exams"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-800"
-          >
-            Inspect Global Exams &rarr;
-          </Link>
-        </div>
+        </Link>
 
-        {/* Security Audit Trail */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-900">System Security Audit Logs</h3>
-              <p className="text-xs text-slate-500">Trace immutable administrative changes</p>
-            </div>
+        <Link
+          href="/admin/audit"
+          className="bg-[#131D33] p-6 rounded-2xl border border-slate-800 shadow-sm hover:border-slate-700 transition-all space-y-3 group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-300 flex items-center justify-center border border-purple-500/20">
+            <Server className="w-5 h-5" />
           </div>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Chronological audit logs of role updates, account state toggles, result publications, and security incidents.
+          <h3 className="text-lg font-bold text-slate-100 group-hover:text-purple-300 transition-colors">{t("admin.auditLogs")}</h3>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Inspect immutable security events, admin clearance actions, and authentication traces.
           </p>
-          <Link
-            href="/admin/audit"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-800"
-          >
-            Review Audit Trail &rarr;
-          </Link>
-        </div>
+        </Link>
       </div>
     </div>
   );

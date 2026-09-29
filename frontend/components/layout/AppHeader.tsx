@@ -38,18 +38,18 @@ export default function AppHeader({ role, navItems, user }: AppHeaderProps) {
         return {
           icon: ShieldCheck,
           badgeText: t("common.adminPortal"),
-          badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200",
+          badgeClass: "bg-purple-950/70 text-purple-300 border-purple-500/40",
           homeHref: "/admin",
-          avatarBg: "bg-indigo-100 text-indigo-700 border-indigo-200",
+          avatarBg: "bg-purple-900/60 text-purple-300 border-purple-700/50",
           defaultInitial: "A",
         };
       case "examiner":
         return {
           icon: BookOpen,
           badgeText: t("common.examinerPortal"),
-          badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200",
+          badgeClass: "bg-teal-950/70 text-teal-300 border-teal-500/40",
           homeHref: "/examiner",
-          avatarBg: "bg-indigo-100 text-indigo-700 border-indigo-200",
+          avatarBg: "bg-teal-900/60 text-teal-300 border-teal-700/50",
           defaultInitial: "E",
         };
       case "student":
@@ -57,9 +57,9 @@ export default function AppHeader({ role, navItems, user }: AppHeaderProps) {
         return {
           icon: GraduationCap,
           badgeText: t("common.studentPortal"),
-          badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200",
+          badgeClass: "bg-teal-950/70 text-teal-300 border-teal-500/40",
           homeHref: "/student",
-          avatarBg: "bg-indigo-100 text-indigo-700 border-indigo-200",
+          avatarBg: "bg-teal-900/60 text-teal-300 border-teal-700/50",
           defaultInitial: "S",
         };
     }
@@ -77,16 +77,16 @@ export default function AppHeader({ role, navItems, user }: AppHeaderProps) {
   };
 
   return (
-    <header className="bg-white/95 backdrop-blur-sm border-b border-slate-200/80 sticky top-0 z-40 shadow-sm">
+    <header className="bg-[#0b132b]/95 backdrop-blur-md border-b border-[#1e2d4a] sticky top-0 z-40 shadow-lg shadow-black/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Portal Badge */}
           <Link href={portal.homeHref} className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-200 group-hover:bg-indigo-700 transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center text-slate-950 font-bold shadow-md shadow-teal-500/20 group-hover:bg-teal-400 transition-colors">
               <PortalIcon className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-lg font-bold text-slate-900 tracking-tight">
+              <span className="text-lg font-bold text-white tracking-tight">
                 {t("common.appName")}
               </span>
               <span
@@ -98,7 +98,7 @@ export default function AppHeader({ role, navItems, user }: AppHeaderProps) {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1.5">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isItemActive(item.href);
@@ -106,15 +106,15 @@ export default function AppHeader({ role, navItems, user }: AppHeaderProps) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
                     active
-                      ? "bg-indigo-50 text-indigo-700 font-semibold"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      ? "bg-teal-500/15 text-teal-300 font-semibold border border-teal-500/30"
+                      : "text-slate-300 hover:text-white hover:bg-[#162238]"
                   }`}
                 >
                   <Icon
                     className={`w-4 h-4 ${
-                      active ? "text-indigo-600" : "text-slate-400"
+                      active ? "text-teal-400" : "text-slate-400"
                     }`}
                   />
                   <span>{item.label}</span>
@@ -123,20 +123,20 @@ export default function AppHeader({ role, navItems, user }: AppHeaderProps) {
             })}
           </nav>
 
-          {/* Right Controls: Language Selector, User Profile & Logout */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Right Controls: Language Selector, User Profile & Logout (Desktop) */}
+          <div className="hidden lg:flex items-center gap-3">
             {/* Multilingual Selector */}
             <LanguageSelector />
 
             {/* User Profile */}
-            <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
+            <div className="flex items-center gap-2.5 pl-3 border-l border-[#1e2d4a]">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs border ${portal.avatarBg}`}
               >
                 {userInitial}
               </div>
               <div className="text-left text-xs max-w-[140px] truncate">
-                <p className="font-semibold text-slate-800 leading-tight truncate">
+                <p className="font-semibold text-slate-200 leading-tight truncate">
                   {user?.name || "User"}
                 </p>
                 <p className="text-slate-400 leading-tight truncate">
@@ -148,7 +148,7 @@ export default function AppHeader({ role, navItems, user }: AppHeaderProps) {
             {/* Logout Button */}
             <button
               onClick={() => authService.logout()}
-              className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+              className="p-2 rounded-xl text-rose-400 hover:text-white hover:bg-rose-600/20 transition-colors"
               title={t("common.logout")}
               aria-label={t("common.logout")}
             >
@@ -157,61 +157,66 @@ export default function AppHeader({ role, navItems, user }: AppHeaderProps) {
           </div>
 
           {/* Mobile Right Controls: Language selector + hamburger */}
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
             <LanguageSelector compact />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 focus:outline-none"
+              className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-[#162238] focus:outline-none border border-[#1e2d4a]"
               aria-label="Toggle navigation menu"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="w-5 h-5 text-teal-400" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile Navigation Drawer / Sidebar */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1 shadow-lg animate-in slide-in-from-top-2 duration-150">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = isItemActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-indigo-50 text-indigo-700 font-semibold"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-              >
-                <Icon
-                  className={`w-4 h-4 ${
-                    active ? "text-indigo-600" : "text-slate-400"
+        <div className="lg:hidden border-t border-[#1e2d4a] bg-[#0f172a] px-4 pt-3 pb-5 space-y-2 shadow-2xl animate-in slide-in-from-top-2 duration-150">
+          <div className="space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isItemActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-teal-500/20 text-teal-300 font-semibold border border-teal-500/40"
+                      : "text-slate-300 hover:bg-[#162238] hover:text-white"
                   }`}
-                />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+                >
+                  <Icon
+                    className={`w-4 h-4 ${
+                      active ? "text-teal-400" : "text-slate-400"
+                    }`}
+                  />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
 
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="pt-4 mt-2 border-t border-[#1e2d4a] flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs border ${portal.avatarBg}`}
+                className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-xs border ${portal.avatarBg}`}
               >
                 {userInitial}
               </div>
               <div className="text-xs">
-                <p className="font-semibold text-slate-800">{user?.name}</p>
+                <p className="font-semibold text-slate-200">{user?.name}</p>
                 <p className="text-slate-400">{user?.email}</p>
               </div>
             </div>
             <button
-              onClick={() => authService.logout()}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-600 bg-red-50 rounded-lg hover:bg-red-100 font-medium transition-colors"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                authService.logout();
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs text-rose-400 bg-rose-950/40 border border-rose-800/40 rounded-xl hover:bg-rose-600 hover:text-white font-medium transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>{t("common.logout")}</span>
@@ -222,3 +227,4 @@ export default function AppHeader({ role, navItems, user }: AppHeaderProps) {
     </header>
   );
 }
+

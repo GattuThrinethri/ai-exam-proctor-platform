@@ -156,6 +156,37 @@ export interface TranslationDictionary {
     nextQuestion: string;
     previousQuestion: string;
     questionNumber: string;
+    timeRemaining: string;
+    minutes: string;
+    markForReview: string;
+    markedForReview: string;
+    clearAnswer: string;
+    saveAnswer: string;
+    question: string;
+    reviewAndSubmit: string;
+    confirmSubmitTitle: string;
+    confirmSubmitDesc: string;
+    returnToExam: string;
+    confirmAndSubmit: string;
+    submitting: string;
+    allChangesSaved: string;
+    errorSaving: string;
+    questionPalette: string;
+    answered: string;
+    inReview: string;
+    unanswered: string;
+    difficulty: string;
+    openNow: string;
+    upcoming: string;
+    closed: string;
+    browseAll: string;
+    handwrittenUpload: string;
+    selectImageFile: string;
+    uploadingImage: string;
+    ocrText: string;
+    detailedAnalysis: string;
+    viewAnalysis: string;
+    percentileRank: string;
   };
   examiner: {
     dashboard: string;
@@ -199,6 +230,20 @@ export interface TranslationDictionary {
     feedbackOptional: string;
     saveEvaluation: string;
     finalizeEvaluation: string;
+    subject: string;
+    marks: string;
+    negativeMarks: string;
+    expectedAnswer: string;
+    modelAnswer: string;
+    addOption: string;
+    removeOption: string;
+    isCorrect: string;
+    editQuestion: string;
+    deleteQuestion: string;
+    confirmDeleteQuestion: string;
+    importQuestionsTitle: string;
+    recentExaminations: string;
+    createFirstExam: string;
   };
   admin: {
     overview: string;
@@ -216,6 +261,13 @@ export interface TranslationDictionary {
     verifyingCredentials: string;
     roleClearance: string;
     securityNotice: string;
+    provisionUser: string;
+    userAccountManagement: string;
+    accountStatus: string;
+    approvalStatus: string;
+    assignedRole: string;
+    deactivate: string;
+    activate: string;
   };
   instructions: {
     title: string;
@@ -263,6 +315,13 @@ export interface TranslationDictionary {
     finalizeEvaluation: string;
     savingEvaluation: string;
     evaluationSaved: string;
+    submissionSuccessTitle: string;
+    submissionSuccessDesc: string;
+    submissionStatusSuccess: string;
+    submissionStatusPending: string;
+    returnToDashboard: string;
+    viewSubmittedExams: string;
+    pendingResultsDesc: string;
   };
 }
 
