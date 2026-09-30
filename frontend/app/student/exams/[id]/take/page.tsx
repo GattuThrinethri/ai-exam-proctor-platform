@@ -159,24 +159,23 @@ export default function ExamTakePage() {
       setRemainingSeconds(Math.max(0, sessionData.remaining_seconds));
 
       // Fetch any previously saved answers
-      const token = authService.getToken();
-      const ansRes = await fetch(`/api/exam-sessions/${sessionId}/answers`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (ansRes.ok) {
-        const savedList = await ansRes.json();
-        const initialAnswers: Record<number, LocalAnswerState> = {};
-        for (const item of savedList) {
-          initialAnswers[item.question_id] = {
-            selected_option_ids: item.selected_option_ids || [],
-            answer_text: item.answer_text || "",
-            image_url: item.image_url || null,
-            ocr_text: item.ocr_text || null,
-            is_marked_for_review: false,
-          };
+      try {
+        const savedList = await studentApi.getSavedAnswers(sessionId);
+        if (Array.isArray(savedList)) {
+          const initialAnswers: Record<number, LocalAnswerState> = {};
+          for (const item of savedList) {
+            initialAnswers[item.question_id] = {
+              selected_option_ids: item.selected_option_ids || [],
+              answer_text: item.answer_text || "",
+              image_url: item.image_url || null,
+              ocr_text: item.ocr_text || null,
+              is_marked_for_review: false,
+            };
+          }
+          setAnswers(initialAnswers);
         }
-        setAnswers(initialAnswers);
+      } catch (e) {
+        console.warn("Could not pre-load saved answers:", e);
       }
     } catch (err: any) {
       setError(err.message || "Failed to load examination paper");

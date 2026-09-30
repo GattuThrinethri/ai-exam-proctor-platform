@@ -23,7 +23,8 @@ export default function Home() {
     setCurrentUser(user);
 
     // Check backend health
-    fetch("/api/health")
+    const apiBase = (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL : "").replace(/\/$/, "");
+    fetch(`${apiBase}/api/health`)
       .then((res) => res.json())
       .then((data) => {
         setBackendHealth(data);

@@ -51,13 +51,27 @@ export class ProctorWebSocketClient {
     this.isExplicitlyClosed = false;
     this.onStatusChange?.("connecting");
 
-    // Use current host or proxy default
-    const protocol = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:";
-    let host = typeof window !== "undefined" ? window.location.host : "127.0.0.1:8001";
-    if (typeof window !== "undefined" && window.location.port === "3000") {
-      host = `${window.location.hostname}:8001`;
+    // Determine WebSocket URL
+    let wsBase = "";
+    if (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_WS_URL) {
+      wsBase = process.env.NEXT_PUBLIC_WS_URL.replace(/\/$/, "");
+    } else if (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) {
+      wsBase = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")
+        .replace(/^http:/, "ws:")
+        .replace(/^https:/, "wss:");
     }
-    const wsUrl = `${protocol}//${host}/api/ws/proctor/${this.sessionId}?token=${encodeURIComponent(this.token)}`;
+
+    let wsUrl: string;
+    if (wsBase) {
+      wsUrl = `${wsBase}/api/ws/proctor/${this.sessionId}?token=${encodeURIComponent(this.token)}`;
+    } else {
+      const protocol = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:";
+      let host = typeof window !== "undefined" ? window.location.host : "127.0.0.1:8001";
+      if (typeof window !== "undefined" && window.location.port === "3000") {
+        host = `${window.location.hostname}:8001`;
+      }
+      wsUrl = `${protocol}//${host}/api/ws/proctor/${this.sessionId}?token=${encodeURIComponent(this.token)}`;
+    }
 
     try {
       this.ws = new WebSocket(wsUrl);

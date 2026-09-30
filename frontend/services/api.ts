@@ -627,6 +627,10 @@ export const studentApi = {
     });
   },
 
+  getSavedAnswers(sessionId: number): Promise<any[]> {
+    return request<any[]>(`/api/exam-sessions/${sessionId}/answers`);
+  },
+
   async uploadAnswerImage(
     sessionId: number,
     questionId: number,
@@ -641,7 +645,8 @@ export const studentApi = {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const res = await fetch(`/api/exam-sessions/${sessionId}/answers/${questionId}/image`, {
+    const url = `${API_BASE}/api/exam-sessions/${sessionId}/answers/${questionId}/image`;
+    const res = await fetch(url, {
       method: "POST",
       headers,
       body: formData,
